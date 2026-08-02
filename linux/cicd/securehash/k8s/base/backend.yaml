@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: securehash
+  labels:
+    app.kubernetes.io/name: securehash-backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: securehash
+spec:
+  replicas: 3
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: securehash-backend
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: securehash-backend
+        app.kubernetes.io/component: backend
+        app.kubernetes.io/part-of: securehash
+
+    spec:
+      automountServiceAccountToken: false
+
+      imagePullSecrets:
+        - name: gitlab-registry-pull
+
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values:
+                      - securehash-backend
+              topologyKey: kubernetes.io/hostname
+
+      containers:
+        - name: backend
+          image: registry.domena.lab/devops-lab/securehash-lab/backend:main
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          securityContext:
+            allowPrivilegeEscalation: false
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+            timeoutSeconds: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 3
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
+            timeoutSeconds: 3
+
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: securehash
+  labels:
+    app.kubernetes.io/name: securehash-backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: securehash
+spec:
+  type: ClusterIP
+
+  selector:
+    app.kubernetes.io/name: securehash-backend
+
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP

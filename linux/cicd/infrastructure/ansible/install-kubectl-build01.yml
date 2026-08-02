@@ -1,0 +1,96 @@
+---
+- name: Zainstaluj kubectl i laboratoryjne CA na agencie Jenkins
+  hosts: build01
+  become: true
+
+  vars:
+    kubectl_version: "v1.35.6"
+    kubectl_arch: "amd64"
+
+    securehash_fqdn: "securehash.domena.lab"
+
+    laboratory_ca_source: "/home/roo/pki/gitlab/lab-root-ca.crt"
+    laboratory_ca_destination: "/etc/pki/ca-trust/source/anchors/domowy-lab-root-ca.crt"
+
+  pre_tasks:
+    - name: Sprawdz publiczny certyfikat laboratoryjnego CA
+      ansible.builtin.stat:
+        path: "{{ laboratory_ca_source }}"
+      delegate_to: localhost
+      become: false
+      register: laboratory_ca
+
+    - name: Zweryfikuj obecnosc publicznego CA
+      ansible.builtin.assert:
+        that:
+          - laboratory_ca.stat.exists
+          - laboratory_ca.stat.isreg
+        fail_msg: "Brak certyfikatu CA: {{ laboratory_ca_source }}"
+
+  tasks:
+    - name: Zainstaluj wymagane pakiety
+      ansible.builtin.dnf:
+        name:
+          - curl
+          - ca-certificates
+        state: present
+
+    - name: Pobierz kubectl z weryfikacja SHA-256
+      ansible.builtin.get_url:
+        url: >-
+          https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/{{ kubectl_arch }}/kubectl
+        dest: /usr/local/bin/kubectl
+        owner: root
+        group: root
+        mode: "0755"
+        checksum: >-
+          sha256:https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/{{ kubectl_arch }}/kubectl.sha256
+
+    - name: Skopiuj publiczny certyfikat laboratoryjnego CA
+      ansible.builtin.copy:
+        src: "{{ laboratory_ca_source }}"
+        dest: "{{ laboratory_ca_destination }}"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Aktualizuj magazyn CA
+
+    - name: Wykonaj handlery przed testami
+      ansible.builtin.meta: flush_handlers
+
+    - name: Sprawdz wersje kubectl
+      ansible.builtin.command:
+        cmd: kubectl version --client
+      changed_when: false
+      register: kubectl_version_result
+
+    - name: Pokaz wersje kubectl
+      ansible.builtin.debug:
+        var: kubectl_version_result.stdout_lines
+
+    - name: Sprawdz DNS aplikacji
+      ansible.builtin.command:
+        cmd: "getent hosts {{ securehash_fqdn }}"
+      changed_when: false
+
+    - name: Sprawdz HTTPS aplikacji
+      ansible.builtin.uri:
+        url: "https://{{ securehash_fqdn }}/healthz"
+        method: GET
+        validate_certs: true
+        return_content: true
+        status_code: 200
+      register: securehash_health
+      changed_when: false
+
+    - name: Zweryfikuj odpowiedz aplikacji
+      ansible.builtin.assert:
+        that:
+          - securehash_health.content | trim == "ok"
+        fail_msg: "build01 nie otrzymal odpowiedzi ok z SecureHash"
+
+  handlers:
+    - name: Aktualizuj magazyn CA
+      ansible.builtin.command:
+        cmd: update-ca-trust
+      changed_when: true

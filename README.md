@@ -1,0 +1,138 @@
+# Enterprise Infrastructure Lab
+
+To mój domowy lab zbudowany do nauki administracji Windows i Linux,
+wirtualizacji, sieci, automatyzacji oraz CI/CD. Całość działa na klastrze
+Proxmox VE z Ceph, a cięższe maszyny są przełączane pomiędzy profilem Windows
+i profilem CI/CD [`proxmox/profile-switching.md`](proxmox/profile-switching.md).
+
+Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible,
+skrypty Proxmox oraz testową aplikację SecureHash z pipeline'em Jenkinsa.
+
+![LabZdjecie](images/LabZdjecie.jpg)
+
+# Sprzęt
+
+| Ilość | Urządzenie | Procesor | RAM | Dyski | Sieć | Zastosowanie |
+|---:|---|---|---:|---|---|---|
+| 1 | Główny komputer AMD | AMD Ryzen 7 9800X3D | 64 GB | 3 × NVMe SSD; każdy z nodów `Lab1`–`Lab3` ma 200 GiB na system i 460 GiB na OSD Ceph | Realtek 10 GbE dla Ceph oraz Realtek 2.5 GbE dla LAN i zarządzania | VMware Workstation i trzy zagnieżdżone nody Proxmox: `Lab1`, `Lab2`, `Lab3` |
+| 1 | Fujitsu P957 — `Lab4` | Intel Core i5-7600 | 16 GB | HDD 2 TB na Proxmox, SSD 500 GB na Ceph | 1 GbE dla zarządzania, 2.5 GbE dla Ceph | Fizyczny node Proxmox |
+| 1 | Fujitsu P957 — `Lab5` | Intel Core i5-7600 | 16 GB | HDD 500 GB na Proxmox, SSD 500 GB na Ceph | 1 GbE dla zarządzania, 2.5 GbE dla Ceph | Fizyczny node Proxmox |
+| 1 | Komputer TrueNAS | Intel Core i5-2500K | 16 GB | SSD 256 GB na system, 2 × HDD 4 TB w mirrorze | 2.5 GbE | TrueNAS SCALE, zasób SMB i kontener Proxmox Backup Server |
+| 1 | HP EliteDesk 800 G3 — `LabFirewall` | Intel Core i5-6500 | 8 GB | SSD 256 GB | 1 GbE dla zarządzania, 2.5 GbE WAN, 2.5 GbE LAN | Proxmox z maszyną OPNsense |
+| 2 | HORACO HC-SWTGW218AS | — | — | — | 10 GbE, 2.5 GbE i 1 GbE | Jeden switch dla Ceph z MTU 9000, drugi dla głównej sieci i zarządzania |
+| 1 | Router ASUS AX3600 | — | — | — | 1 GbE i Wi-Fi | Dostęp bezprzewodowy do sieci laboratoryjnej i logowanie przez RADIUS/NPS |
+| 1 | Router FunBox | — | — | — | — | Łącze z Internetem i osobna podsieć, do której jest podłączony host TrueNAS |
+
+## Co działa w labie
+
+- pięć nodów Proxmox VE, Corosync, HA i migracje maszyn
+- Ceph RBD z pięcioma OSD, replikacją `size=3` i osobną siecią storage
+- dwa kontrolery domeny z AD DS, DNS, DHCP failover, GPO i NPS/RADIUS
+- SQL Server, Microsoft Configuration Manager, WSUS i Entra Connect Sync
+- Root CA offline, Issuing CA oraz serwer Nginx publikujący AIA i CRL
+- automatyczne tworzenie VM Rocky Linux z cloud-init
+- zarządzanie serwerami Linux przez Ansible
+- GitLab CE, prywatny Container Registry, Jenkins i osobny agent build
+- trzywęzłowy K3s z embedded etcd, kube-vip, MetalLB i NGINX Ingress
+- pipeline budujący, testujący, skanujący i wdrażający testową aplikację SecureHash
+- Zabbix dla serwerów oraz Prometheus i Grafana dla K3s
+- OPNsense, osobna sieć Ceph i zdalny dostęp przez Tailscale
+- backupy VM do Proxmox Backup Server działającego na hoście TrueNAS
+- skrypty przełączające zasoby HA pomiędzy profilem `windows` i `cicd`
+
+## Schemat
+
+![enterprise-lab-overview](images/enterprise-lab-overview.png)
+
+## Technologie uzyte w projekcie
+
+| Obszar | Technologie |
+|---|---|
+| Wirtualizacja | Proxmox VE 9, VMware Workstation |
+| Storage i backup | Ceph Squid, TrueNAS SCALE, Proxmox Backup Server |
+| Bazy | PostgreSQL, SQL Server 2022 |
+| Windows | Windows Server 2025, AD DS, DNS, DHCP, NPS, GPO, AD CS, PowerShell, Configuration Manager, WSUS, Entra Connect Sync |
+| Linux | Rocky Linux 10, Ansible, Bash |
+| Sieć | OPNsense, Tailscale |
+| CI/CD | GitLab CE, Jenkins, Docker, Trivy |
+| Kubernetes | K3s, Helm, MetalLB, NGINX Ingress |
+| Aplikacja | Python, FastAPI, React, Vite, Nginx |
+| Monitoring | Zabbix, Prometheus, Grafana |
+
+## Zawartość repozytorium
+
+| Katalog | Co zawiera |
+|---|---|
+| [`proxmox/`](proxmox/) | klaster, Ceph, HA, nested virtualization i profile VM |
+| [`windows/`](windows/) | AD, DNS, DHCP, NPS, PowerShell, SQL, SCCM, Entra Connect i PKI |
+| [`linux/`](linux/) | Rocky Linux, Ansible, platforma CI/CD |
+| [`monitoring/`](monitoring/) | Zabbix oraz monitoring K3s |
+| [`networking/`](networking/) | OPNsense, sieć Ceph i Tailscale |
+| [`backup/`](backup/) | TrueNAS, PBS i polityka wykonywania kopii |
+| [`troubleshooting/`](troubleshooting/) | problemy napotkane podczas budowy laba |
+
+## Instalacja Rocky Linux 10 + Zabbix client (Bash+Ansible)
+
+[![Watch the video](https://img.youtube.com/vi/jx5JFHaUXdw/hqdefault.jpg)](https://www.youtube.com/embed/jx5JFHaUXdw)
+
+Opis w
+[`linux/README.md`](linux/README.md), oraz
+[`linux/ansible/README.md`](linux/ansible/README.md)
+
+## Profile Windows i CI/CD
+
+Sprzęt nie pozwala wygodnie uruchamiać wszystkich maszyn naraz. Profile
+wyłączają jeden zestaw VM i włączają drugi:
+
+```bash
+/mnt/pve/ProxmoxStorage/scripts/profil-windows.sh
+/mnt/pve/ProxmoxStorage/scripts/profil-cicd.sh
+/mnt/pve/ProxmoxStorage/scripts/profil-status.sh
+```
+
+[![Watch the video](https://img.youtube.com/vi/Up8BLP5pXxE/hqdefault.jpg)](https://www.youtube.com/embed/Up8BLP5pXxE)
+
+Opis i skrypty znajdują się w
+[`proxmox/profile-switching.md`](proxmox/profile-switching.md).
+
+## Pipeline aplikacji SecureHash
+
+```text
+commit lub Merge Request
+→ GitLab wysyła webhook do Jenkinsa
+→ quality gate
+→ skany Trivy
+→ budowa i wysłanie obrazów do Registry
+→ wdrożenie brancha main do K3s
+→ rolling update
+→ test aplikacji
+→ rollback przy błędzie
+```
+
+[![Watch the video](https://img.youtube.com/vi/6pclmimSptk/hqdefault.jpg)](https://www.youtube.com/embed/6pclmimSptk)
+
+Dokładniejszy opis jest w
+[`linux/cicd/README.md`](linux/cicd/README.md).
+
+## Kilka uwag
+
+- `Lab1`–`Lab3` są zagnieżdżone w VMware na jednym komputerze AMD, a `Lab4`
+  i `Lab5` to dwa fizyczne komputery Intel
+- cold migration działa pomiędzy wszystkimi nodami, natomiast live migration
+  Windows z nested AMD do Intel kończy się błędem `MEMORY_MANAGEMENT`
+- dokumentacja była nadrabiana z dużym opóźnieniem z pamięci stąd opisy przede wszystkim architektury Windowsa mogą nie być kompletne
+
+
+
+# 01.08.2026 Co dalej
+
+## Aktualnie:
+
+- Mimo działającego pipelinu moja wiedza tutaj jest dość ograniczona - nowe środowisko, więc głównie tutaj skupiam się na zmianach, psuciu i naprawianiu
+- W wolnym czasie przygotowuję się do certyfikatu AZ-900 (Azure cloud)
+
+## W przyszłości:
+
+- W dalszej przyszłości zamierzam dodać jakiś projekt z użyciem cloud + Terraform
+- Poprawić VLANy wraz z podziałem sieci na Management, VM, Ceph (wymaga zakupu większej ilości kart sieciowych)
+- Zacząć przygotowywać się do certyfikatu RHCSA (Red Hat Certified System Administrator)

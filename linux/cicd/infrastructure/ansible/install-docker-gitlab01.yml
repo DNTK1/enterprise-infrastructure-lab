@@ -1,0 +1,141 @@
+- name: Instalacja Docker Engine na build01
+  hosts: gitlab
+  become: true
+
+  tasks:
+    - name: Usun pakiety kolidujace z Docker CE
+      ansible.builtin.dnf:
+        name:
+          - docker
+          - docker-client
+          - docker-client-latest
+          - docker-common
+          - docker-latest
+          - docker-latest-logrotate
+          - docker-logrotate
+          - docker-engine
+          - podman
+          - runc
+        state: absent
+
+    - name: Zainstaluj narzedzia do obslugi repozytoriow DNF
+      ansible.builtin.dnf:
+        name: dnf-plugins-core
+        state: present
+
+    - name: Dodaj klucz GPG repozytorium Docker
+      ansible.builtin.rpm_key:
+        key: https://download.docker.com/linux/rhel/gpg
+        state: present
+
+    - name: Dodaj oficjalne repozytorium Docker dla RHEL
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/rhel/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Zainstaluj Docker Engine, narzedzia sieciowe i moduly kernela
+      ansible.builtin.dnf:
+        name:
+          - kernel-modules-extra
+          - nftables
+          - iptables-nft
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Utworz katalog konfiguracji Docker
+      ansible.builtin.file:
+        path: /etc/docker
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Skonfiguruj rotacje logow kontenerow
+      ansible.builtin.copy:
+        dest: /etc/docker/daemon.json
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          {
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "10m",
+              "max-file": "3"
+            },
+            "live-restore": true
+          }
+      notify: Restart Docker
+
+    - name: Skonfiguruj automatyczne ladowanie modulow Docker
+      ansible.builtin.copy:
+        dest: /etc/modules-load.d/docker.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          overlay
+          br_netfilter
+          ip_tables
+          iptable_nat
+
+    - name: Zaladuj moduly wymagane przez Docker
+      ansible.builtin.command:
+        cmd: "modprobe {{ item }}"
+      loop:
+        - overlay
+        - br_netfilter
+        - ip_tables
+        - iptable_nat
+      changed_when: false
+
+    - name: Uruchom containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: started
+        enabled: true
+
+    - name: Sprawdz konfiguracje daemon.json
+      ansible.builtin.command:
+        cmd: dockerd --validate --config-file=/etc/docker/daemon.json
+      register: docker_config_validation
+      changed_when: false
+
+    - name: Uruchom i wlacz Docker przy starcie systemu
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Sprawdz wersje Docker Engine
+      ansible.builtin.command:
+        cmd: docker version
+      register: docker_version
+      changed_when: false
+
+    - name: Pokaz wersje Docker Engine
+      ansible.builtin.debug:
+        var: docker_version.stdout_lines
+
+    - name: Sprawdz wersje Docker Compose
+      ansible.builtin.command:
+        cmd: docker compose version
+      register: compose_version
+      changed_when: false
+
+    - name: Pokaz wersje Docker Compose
+      ansible.builtin.debug:
+        var: compose_version.stdout
+
+  handlers:
+    - name: Restart Docker
+      ansible.builtin.systemd:
+        name: docker
+        state: restarted

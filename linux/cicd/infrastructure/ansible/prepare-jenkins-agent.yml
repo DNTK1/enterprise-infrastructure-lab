@@ -1,0 +1,93 @@
+- name: Przygotowanie build01 jako agenta Jenkins
+  hosts: jenkins_agents
+  become: true
+
+  vars:
+    controller_ip: "10.10.0.131"
+    agent_public_key_file: "/home/roo/.ssh/id_rsa_jenkins_build01.pub"
+
+  tasks:
+    - name: Zainstaluj Java 21 i narzedzia agenta
+      ansible.builtin.dnf:
+        name:
+          - java-21-openjdk-headless
+          - git
+          - bash
+          - tar
+          - gzip
+          - unzip
+        state: present
+
+    - name: Sprawdz istnienie grupy docker
+      ansible.builtin.group:
+        name: docker
+        state: present
+
+    - name: Utworz uzytkownika jenkins-agent
+      ansible.builtin.user:
+        name: jenkins-agent
+        comment: Jenkins Build Agent
+        home: /var/lib/jenkins-agent
+        shell: /bin/bash
+        create_home: true
+        groups:
+          - docker
+        append: true
+        password_lock: true
+        state: present
+
+    - name: Ustaw prawa katalogu agenta
+      ansible.builtin.file:
+        path: /var/lib/jenkins-agent
+        state: directory
+        owner: jenkins-agent
+        group: jenkins-agent
+        mode: "0750"
+
+    - name: Utworz katalog SSH agenta
+      ansible.builtin.file:
+        path: /var/lib/jenkins-agent/.ssh
+        state: directory
+        owner: jenkins-agent
+        group: jenkins-agent
+        mode: "0700"
+
+    - name: Dodaj klucz kontrolera do authorized_keys
+      ansible.builtin.copy:
+        dest: /var/lib/jenkins-agent/.ssh/authorized_keys
+        owner: jenkins-agent
+        group: jenkins-agent
+        mode: "0600"
+        content: >-
+          from="{{ controller_ip }}",no-agent-forwarding,no-port-forwarding,no-X11-forwarding,no-user-rc
+          {{ lookup('file', agent_public_key_file) }}
+
+    - name: Sprawdz wersje Java
+      ansible.builtin.command:
+        cmd: java -version
+      register: java_version
+      changed_when: false
+
+    - name: Pokaz wersje Java
+      ansible.builtin.debug:
+        var: java_version.stderr_lines
+
+    - name: Sprawdz grupy uzytkownika agenta
+      ansible.builtin.command:
+        cmd: id jenkins-agent
+      register: agent_id
+      changed_when: false
+
+    - name: Pokaz grupy uzytkownika agenta
+      ansible.builtin.debug:
+        var: agent_id.stdout
+
+    - name: Sprawdz dostep agenta do Dockera
+      ansible.builtin.command:
+        cmd: runuser -u jenkins-agent -- docker version
+      register: agent_docker
+      changed_when: false
+
+    - name: Pokaz wynik testu Dockera
+      ansible.builtin.debug:
+        var: agent_docker.stdout_lines

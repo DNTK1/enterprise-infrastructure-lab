@@ -1,0 +1,40 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.kubeconfig
+vault.yml
+vault-password*
+*.password
+*.token
+
+# Ansible
+*.retry
+inventory.ini
+
+# Build and test output
+node_modules/
+dist/
+reports/
+htmlcov/
+.coverage
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+
+# Local files and backups
+/linux/deploy-rocky.conf
+*.log
+*.bak
+*.backup
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

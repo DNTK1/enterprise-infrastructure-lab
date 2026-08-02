@@ -1,0 +1,39 @@
+- name: Instalacja Trivy na build01
+  hosts: jenkins_agents
+  become: true
+
+  tasks:
+    - name: Dodaj klucz GPG repozytorium Trivy
+      ansible.builtin.rpm_key:
+        key: https://aquasecurity.github.io/trivy-repo/rpm/public.key
+        state: present
+
+    - name: Dodaj oficjalne repozytorium Trivy
+      ansible.builtin.copy:
+        dest: /etc/yum.repos.d/trivy.repo
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          [trivy]
+          name=Trivy repository
+          baseurl=https://aquasecurity.github.io/trivy-repo/rpm/releases/$basearch/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://aquasecurity.github.io/trivy-repo/rpm/public.key
+
+    - name: Zainstaluj Trivy
+      ansible.builtin.dnf:
+        name: trivy
+        state: present
+        update_cache: true
+
+    - name: Sprawdz wersje Trivy
+      ansible.builtin.command:
+        cmd: trivy --version
+      register: trivy_version
+      changed_when: false
+
+    - name: Pokaz wersje Trivy
+      ansible.builtin.debug:
+        var: trivy_version.stdout_lines

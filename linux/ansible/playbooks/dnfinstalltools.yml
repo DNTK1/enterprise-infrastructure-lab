@@ -1,0 +1,28 @@
+- name: Instalacja toolsow
+  hosts: all
+
+  tasks:
+    - name: Install tools
+      ansible.builtin.dnf:
+        name:
+        - bash-completion
+        - bind-utils
+        - chrony
+        - curl
+        - git
+        - iproute
+        - jq
+        - less
+        - lsof
+        - nano
+        - net-tools
+        - openssl
+        - policycoreutils-python-utils
+        - qemu-guest-agent
+        - rsync
+        - tar
+        - traceroute
+        - unzip
+        - vim-enhanced
+        - wget
+        state: present

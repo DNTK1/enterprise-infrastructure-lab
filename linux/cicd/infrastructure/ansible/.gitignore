@@ -1,0 +1,44 @@
+# Hasła i lokalne sekrety
+.vault-pass
+.vault-pass.*
+vault-password
+vault-password.*
+*.password
+*.token
+
+# Klucze prywatne i pakiety certyfikatów
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+
+# Kubeconfigi
+.kube/
+kubeconfig
+kubeconfig.*
+config-k3s-lab
+k3s.yaml
+
+# Pliki tymczasowe Ansible
+*.retry
+*.backup
+*.backup-*
+*.bak
+*.tmp
+
+# Edytory
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# System
+.DS_Store
+Thumbs.db
+.private/

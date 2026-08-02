@@ -1,0 +1,195 @@
+- name: Instalacja Jenkins Controller z NGINX i HTTPS
+  hosts: jenkins_controller
+  become: true
+
+  vars:
+    lab_domain: "DOMENA.LAB"
+    jenkins_fqdn: "jenkins.{{ lab_domain }}"
+    pki_source_dir: "/home/roo/pki/jenkins"
+
+  tasks:
+    - name: Dodaj klucz GPG repozytorium Jenkins
+      ansible.builtin.rpm_key:
+        key: https://pkg.jenkins.io/rpm-stable/jenkins.io-2026.key
+        state: present
+
+    - name: Dodaj repozytorium Jenkins LTS
+      ansible.builtin.get_url:
+        url: https://pkg.jenkins.io/rpm-stable/jenkins.repo
+        dest: /etc/yum.repos.d/jenkins.repo
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Zainstaluj Jenkins, Java 21 i NGINX
+      ansible.builtin.dnf:
+        name:
+          - fontconfig
+          - java-21-openjdk
+          - jenkins
+          - nginx
+          - policycoreutils-python-utils
+        state: present
+        update_cache: true
+
+    - name: Zatrzymaj Jenkins przed konfiguracja
+      ansible.builtin.systemd:
+        name: jenkins
+        state: stopped
+      failed_when: false
+
+    - name: Utworz katalog certyfikatow
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "{{ item.mode }}"
+      loop:
+        - path: /etc/pki/tls/certs
+          mode: "0755"
+        - path: /etc/pki/tls/private
+          mode: "0700"
+        - path: /etc/systemd/system/jenkins.service.d
+          mode: "0755"
+
+    - name: Skopiuj certyfikat Jenkinsa
+      ansible.builtin.copy:
+        src: "{{ pki_source_dir }}/{{ jenkins_fqdn }}.crt"
+        dest: /etc/pki/tls/certs/jenkins.crt
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart NGINX
+
+    - name: Skopiuj klucz prywatny Jenkinsa
+      ansible.builtin.copy:
+        src: "{{ pki_source_dir }}/{{ jenkins_fqdn }}.key"
+        dest: /etc/pki/tls/private/jenkins.key
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+      notify: Restart NGINX
+
+    - name: Skonfiguruj Jenkins jako usluge lokalna
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/jenkins.service.d/override.conf
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          [Service]
+          Environment="JAVA_OPTS=-Djava.awt.headless=true -Xmx2048m -XX:+UseStringDeduplication"
+          Environment="JENKINS_OPTS=--httpPort=8080 --httpListenAddress=127.0.0.1"
+          TimeoutStartSec=300
+      notify:
+        - Reload systemd
+        - Restart Jenkins
+
+    - name: Skonfiguruj NGINX jako reverse proxy
+      ansible.builtin.copy:
+        dest: /etc/nginx/conf.d/jenkins.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          map $http_upgrade $connection_upgrade {
+              default upgrade;
+              ''      close;
+          }
+
+          upstream jenkins_backend {
+              keepalive 32;
+              server 127.0.0.1:8080;
+          }
+
+          server {
+              listen 80;
+              server_name {{ jenkins_fqdn }};
+
+              return 301 https://$host$request_uri;
+          }
+
+          server {
+              listen 443 ssl;
+              server_name {{ jenkins_fqdn }};
+
+              ssl_certificate     /etc/pki/tls/certs/jenkins.crt;
+              ssl_certificate_key /etc/pki/tls/private/jenkins.key;
+
+              ssl_protocols TLSv1.2 TLSv1.3;
+              ssl_session_cache shared:SSL:10m;
+              ssl_session_timeout 10m;
+
+              access_log /var/log/nginx/jenkins.access.log;
+              error_log  /var/log/nginx/jenkins.error.log;
+
+              client_max_body_size 100m;
+              ignore_invalid_headers off;
+
+              location / {
+                  proxy_pass http://jenkins_backend;
+                  proxy_redirect default;
+                  proxy_http_version 1.1;
+
+                  proxy_set_header Host $http_host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto https;
+                  proxy_set_header X-Forwarded-Port 443;
+                  proxy_set_header X-Forwarded-Host $host;
+
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_connect_timeout 90;
+                  proxy_send_timeout 300;
+                  proxy_read_timeout 300;
+                  proxy_request_buffering off;
+                  proxy_max_temp_file_size 0;
+              }
+          }
+      notify: Restart NGINX
+
+    - name: Pozwol NGINX laczyc sie z lokalnym Jenkinsem przez SELinux
+      ansible.posix.seboolean:
+        name: httpd_can_network_connect
+        state: true
+        persistent: true
+
+    - name: Przeladuj konfiguracje systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Uruchom Jenkins
+      ansible.builtin.systemd:
+        name: jenkins
+        state: started
+        enabled: true
+
+    - name: Sprawdz konfiguracje NGINX
+      ansible.builtin.command:
+        cmd: nginx -t
+      changed_when: false
+
+    - name: Uruchom NGINX
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Restart Jenkins
+      ansible.builtin.systemd:
+        name: jenkins
+        state: restarted
+
+    - name: Restart NGINX
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted

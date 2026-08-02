@@ -1,0 +1,47 @@
+name: securehash
+
+services:
+  backend:
+    build:
+      context: ./backend
+    image: securehash-backend:local
+    restart: unless-stopped
+    networks:
+      - securehash-net
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 100
+    mem_limit: 512m
+    cpus: 1.0
+
+  frontend:
+    build:
+      context: ./frontend
+    image: securehash-frontend:local
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - securehash-net
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 100
+    mem_limit: 128m
+    cpus: 0.5
+
+networks:
+  securehash-net:
+    driver: bridge

@@ -1,0 +1,11 @@
+- name: Dodatkowa instalacja pakietow dla K3s RHEL
+  hosts: k3s_clients
+  become: true
+  gather_facts: false  
+
+  tasks: 
+    - name: Install kernel-modules-extra K3s (https://docs.k3s.io/installation/requirements?os=rhel)
+      ansible.builtin.dnf:
+        name:
+        - kernel-modules-extra
+        state: present

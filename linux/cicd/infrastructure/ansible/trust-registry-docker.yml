@@ -1,0 +1,91 @@
+- name: Skonfiguruj zaufanie Dockera do GitLab Registry
+  hosts: jenkins_agents
+  become: true
+
+  vars:
+    # Wpisz prawdziwą nazwę. Najlepiej wszędzie używać małych liter.
+    registry_fqdn: "registry.DOMENA.LAB"
+
+    # Plik znajduje się na RockyGUIAnsible, czyli kontrolerze Ansible.
+    ca_source: "/home/roo/pki/gitlab/lab-root-ca.crt"
+
+    # Docker użyje katalogu zapisanego małymi literami.
+    registry_fqdn_lower: "{{ registry_fqdn | lower }}"
+    docker_registry_ca_dir: "/etc/docker/certs.d/{{ registry_fqdn_lower }}"
+
+  pre_tasks:
+    - name: Sprawdz certyfikat CA na kontrolerze Ansible
+      ansible.builtin.stat:
+        path: "{{ ca_source }}"
+      delegate_to: localhost
+      become: false
+      register: ca_file
+
+    - name: Przerwij, gdy certyfikat CA nie istnieje
+      ansible.builtin.assert:
+        that:
+          - ca_file.stat.exists
+          - ca_file.stat.isreg
+        fail_msg: "Brak certyfikatu CA: {{ ca_source }}"
+        success_msg: "Certyfikat CA istnieje."
+
+  tasks:
+    - name: Utworz katalog certyfikatow dla Registry
+      ansible.builtin.file:
+        path: "{{ docker_registry_ca_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Skopiuj CA do katalogu Dockera
+      ansible.builtin.copy:
+        src: "{{ ca_source }}"
+        dest: "{{ docker_registry_ca_dir }}/ca.crt"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart Docker
+
+    - name: Skopiuj CA do systemowego magazynu zaufania
+      ansible.builtin.copy:
+        src: "{{ ca_source }}"
+        dest: /etc/pki/ca-trust/source/anchors/domowy-lab-root-ca.crt
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Odswiez magazyn CA
+        - Restart Docker
+
+    - name: Upewnij sie, ze Docker jest uruchomiony
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Pokaz certyfikat z katalogu Dockera
+      ansible.builtin.command:
+        cmd: >-
+          openssl x509
+          -in {{ docker_registry_ca_dir }}/ca.crt
+          -noout
+          -subject
+          -issuer
+      register: registry_ca
+      changed_when: false
+
+    - name: Pokaz informacje o CA
+      ansible.builtin.debug:
+        var: registry_ca.stdout_lines
+
+  handlers:
+    - name: Odswiez magazyn CA
+      ansible.builtin.command:
+        cmd: update-ca-trust
+      changed_when: true
+
+    - name: Restart Docker
+      ansible.builtin.systemd:
+        name: docker
+        state: restarted

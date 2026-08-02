@@ -1,0 +1,248 @@
+pipeline {
+    agent {
+        label 'docker'
+    }
+
+    options {
+        timestamps()
+        ansiColor('xterm')
+        disableConcurrentBuilds()
+        skipDefaultCheckout(true)
+
+        buildDiscarder(
+            logRotator(
+                numToKeepStr: '20',
+                artifactNumToKeepStr: '10'
+            )
+        )
+
+        gitLabConnection('gitlab-lab')
+
+        gitlabBuilds(
+            builds: [
+                'quality-gate',
+                'security-scan',
+                'publish-images'
+            ]
+        )
+    }
+
+    environment {
+        REGISTRY = 'registry.domena.lab'
+
+        BACKEND_IMAGE =
+            'registry.domena.lab/devops-lab/securehash-lab/backend'
+
+        FRONTEND_IMAGE =
+            'registry.domena.lab/devops-lab/securehash-lab/frontend'
+
+        K8S_NAMESPACE = 'securehash'
+        APP_FQDN = 'securehash.domena.lab'
+    }
+
+    stages {
+        stage('Pobranie kodu') {
+            steps {
+                checkout scm
+
+                script {
+                    env.IMAGE_TAG = sh(
+                        script: 'git rev-parse --short=12 HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    def sourceBranches = [
+                        env.BRANCH_NAME ?: '',
+                        env.GIT_BRANCH ?: '',
+                        env.gitlabSourceBranch ?: ''
+                    ]
+
+                    env.DEPLOY_TO_K3S = sourceBranches.any {
+                        it == 'main' ||
+                        it == 'origin/main' ||
+                        it == 'refs/heads/main'
+                    } ? 'true' : 'false'
+                }
+
+                sh '''#!/usr/bin/env bash
+set -euxo pipefail
+
+echo "===== COMMIT ====="
+git log -1 --oneline
+
+echo "===== TAG OBRAZOW ====="
+echo "$IMAGE_TAG"
+
+echo "===== INFORMACJE O BRANCHU ====="
+echo "BRANCH_NAME=${BRANCH_NAME:-brak}"
+echo "GIT_BRANCH=${GIT_BRANCH:-brak}"
+echo "gitlabSourceBranch=${gitlabSourceBranch:-brak}"
+echo "DEPLOY_TO_K3S=${DEPLOY_TO_K3S}"
+
+echo "===== AGENT ====="
+whoami
+hostname
+echo "$NODE_NAME"
+
+test "$(whoami)" = "jenkins-agent"
+test "$NODE_NAME" = "build01"
+'''
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                gitlabCommitStatus(name: 'quality-gate') {
+                    sh '''#!/usr/bin/env bash
+set -euxo pipefail
+
+./scripts/quality-gate.sh
+'''
+                }
+            }
+        }
+
+        stage('Skanowanie bezpieczeństwa') {
+            steps {
+                gitlabCommitStatus(name: 'security-scan') {
+                    sh '''#!/usr/bin/env bash
+set -euxo pipefail
+
+./scripts/security-scan.sh
+'''
+                }
+            }
+
+            post {
+                always {
+                    archiveArtifacts(
+                        artifacts: 'reports/*.txt',
+                        allowEmptyArchive: true,
+                        fingerprint: true
+                    )
+                }
+            }
+        }
+
+        stage('Publikacja obrazów') {
+            steps {
+                gitlabCommitStatus(name: 'publish-images') {
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'gitlab-deploy-token',
+                            usernameVariable: 'REGISTRY_USER',
+                            passwordVariable: 'REGISTRY_TOKEN'
+                        )
+                    ]) {
+                        sh '''#!/usr/bin/env bash
+set -Eeuo pipefail
+
+export DOCKER_CONFIG="$WORKSPACE/.docker"
+mkdir -p "$DOCKER_CONFIG"
+
+set +x
+
+printf '%s' "$REGISTRY_TOKEN" \
+    | docker login "$REGISTRY" \
+        --username "$REGISTRY_USER" \
+        --password-stdin
+
+echo "===== PUBLIKACJA NIEZMIENNYCH TAGOW SHA ====="
+
+docker tag \
+    securehash-backend:local \
+    "$BACKEND_IMAGE:$IMAGE_TAG"
+
+docker tag \
+    securehash-frontend:local \
+    "$FRONTEND_IMAGE:$IMAGE_TAG"
+
+docker push "$BACKEND_IMAGE:$IMAGE_TAG"
+docker push "$FRONTEND_IMAGE:$IMAGE_TAG"
+
+if [[ "$DEPLOY_TO_K3S" == "true" ]]; then
+    echo "===== AKTUALIZACJA TAGU MAIN ====="
+
+    docker tag \
+        securehash-backend:local \
+        "$BACKEND_IMAGE:main"
+
+    docker tag \
+        securehash-frontend:local \
+        "$FRONTEND_IMAGE:main"
+
+    docker push "$BACKEND_IMAGE:main"
+    docker push "$FRONTEND_IMAGE:main"
+else
+    echo "Pomijam tag main: pipeline nie dotyczy brancha main."
+fi
+'''
+                    }
+                }
+            }
+        }
+
+        stage('Wdrożenie do K3s') {
+            when {
+                expression {
+                    return env.DEPLOY_TO_K3S == 'true'
+                }
+            }
+
+            options {
+                timeout(
+                    time: 20,
+                    unit: 'MINUTES'
+                )
+            }
+
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: 'k3s-securehash-deployer',
+                        variable: 'KUBECONFIG_FILE'
+                    )
+                ]) {
+                    sh '''#!/usr/bin/env bash
+set +x
+set -Eeuo pipefail
+
+export KUBECONFIG="$KUBECONFIG_FILE"
+
+./ci/deploy-k3s.sh
+'''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'PIPELINE: zakończony powodzeniem'
+        }
+
+        failure {
+            echo 'PIPELINE: zakończony błędem'
+        }
+
+        always {
+            sh '''#!/usr/bin/env bash
+set +e
+
+export DOCKER_CONFIG="$WORKSPACE/.docker"
+
+docker logout "$REGISTRY" >/dev/null 2>&1 || true
+rm -rf "$DOCKER_CONFIG"
+
+docker compose down \
+    --remove-orphans \
+    >/dev/null 2>&1 || true
+'''
+
+            cleanWs(
+                deleteDirs: true,
+                disableDeferredWipeout: true
+            )
+        }
+    }
+}

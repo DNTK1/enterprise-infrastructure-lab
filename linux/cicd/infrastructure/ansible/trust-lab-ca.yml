@@ -1,0 +1,23 @@
+- name: Instalacja laboratoryjnego CA na serwerach
+  hosts: cicd_lab
+  become: true
+
+  vars:
+    lab_domain: "DOMENA.LAB"
+    ca_source: "/home/roo/pki/gitlab/lab-root-ca.crt"
+
+  tasks:
+    - name: Skopiuj certyfikat laboratoryjnego CA
+      ansible.builtin.copy:
+        src: "{{ ca_source }}"
+        dest: /etc/pki/ca-trust/source/anchors/domowy-lab-root-ca.crt
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Odswiez magazyn CA
+
+  handlers:
+    - name: Odswiez magazyn CA
+      ansible.builtin.command:
+        cmd: update-ca-trust
+      changed_when: true

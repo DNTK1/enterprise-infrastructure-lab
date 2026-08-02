@@ -1,0 +1,40 @@
+controller:
+  replicaCount: 3
+
+  ingressClass:
+    name: nginx
+    create: true
+    setAsDefaultIngress: false
+
+  enableCustomResources: false
+  enableSnippets: false
+
+  appprotect:
+    enable: false
+
+  appprotectdos:
+    enable: false
+
+  healthStatus: true
+  healthStatusURI: /nginx-health
+
+  service:
+    create: true
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+
+    annotations:
+      metallb.io/address-pool: lan-pool
+      metallb.io/loadBalancerIPs: 10.10.0.231
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2

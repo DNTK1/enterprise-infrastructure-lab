@@ -1,0 +1,57 @@
+- name: Konfiguracja Rocky10 pod CICD
+  hosts: all
+  become: true
+  gather_facts: false  
+
+  tasks:
+    - name: Update all packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+        update_cache: true
+        
+    - name: Instalacja toolsow
+      ansible.builtin.dnf:
+        name:
+        - bash-completion
+        - bind-utils
+        - chrony
+        - curl
+        - git
+        - iproute
+        - jq
+        - less
+        - lsof
+        - nano
+        - net-tools
+        - openssl
+        - policycoreutils-python-utils
+        - qemu-guest-agent
+        - rsync
+        - tar
+        - traceroute
+        - unzip
+        - vim-enhanced
+        - wget
+        state: present
+
+    - name: Włącz i uruchom chronyd (synchronizacja czasu)
+      ansible.builtin.systemd_service:
+        name: chronyd
+        enabled: true
+        state: started
+
+    - name: Włącz i uruchom qemu-guest-agent
+      ansible.builtin.systemd_service:
+        name: qemu-guest-agent
+        enabled: true
+        state: started
+
+    - name: Ustaw strefę czasową Europe/Warsaw
+      community.general.timezone:
+        name: Europe/Warsaw
+
+    - name: Uruchom ponownie serwer
+      ansible.builtin.reboot:
+        msg: "Restart wykonywany przez Ansible"
+        reboot_timeout: 600

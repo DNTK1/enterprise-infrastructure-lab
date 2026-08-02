@@ -1,0 +1,95 @@
+- name: Skonfiguruj zaufanie K3s do GitLab Container Registry
+  hosts: k3s_servers
+  become: true
+  serial: 1
+
+  vars:
+    registry_fqdn: "registry.domena.lab"
+    registry_ca_source: "/home/roo/pki/gitlab/lab-root-ca.crt"
+    registry_ca_destination: "/etc/rancher/k3s/certs/domowy-lab-root-ca.crt"
+
+  pre_tasks:
+    - name: Sprawdz certyfikat CA na kontrolerze Ansible
+      ansible.builtin.stat:
+        path: "{{ registry_ca_source }}"
+      delegate_to: localhost
+      become: false
+      register: registry_ca_file
+
+    - name: Zweryfikuj obecność CA
+      ansible.builtin.assert:
+        that:
+          - registry_ca_file.stat.exists
+          - registry_ca_file.stat.isreg
+        fail_msg: "Brak pliku CA: {{ registry_ca_source }}"
+
+  tasks:
+    - name: Utworz katalog certyfikatow K3s
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/certs
+        state: directory
+        owner: root
+        group: root
+        mode: "0750"
+
+    - name: Skopiuj laboratoryjne CA
+      ansible.builtin.copy:
+        src: "{{ registry_ca_source }}"
+        dest: "{{ registry_ca_destination }}"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart K3s
+
+    - name: Zapisz konfiguracje prywatnego Registry
+      ansible.builtin.copy:
+        dest: /etc/rancher/k3s/registries.yaml
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          mirrors:
+            "{{ registry_fqdn }}":
+              endpoint:
+                - "https://{{ registry_fqdn }}"
+
+          configs:
+            "{{ registry_fqdn }}":
+              tls:
+                ca_file: "{{ registry_ca_destination }}"
+      notify: Restart K3s
+
+    - name: Wykonaj restart przed kontrola
+      ansible.builtin.meta: flush_handlers
+
+    - name: Poczekaj na lokalny port API
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 6443
+        timeout: 300
+
+    - name: Sprawdz usluge K3s
+      ansible.builtin.command:
+        cmd: systemctl is-active k3s
+      changed_when: false
+
+    - name: Poczekaj na status Ready noda
+      ansible.builtin.command:
+        cmd: >-
+          kubectl wait
+          --for=condition=Ready
+          node/{{ inventory_hostname }}
+          --timeout=300s
+      delegate_to: localhost
+      become: false
+      environment:
+        KUBECONFIG: /home/roo/.kube/config-k3s-lab
+      changed_when: false
+
+  handlers:
+    - name: Restart K3s
+      ansible.builtin.systemd:
+        name: k3s
+        state: restarted
+        enabled: true
+        daemon_reload: true

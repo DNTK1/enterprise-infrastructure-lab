@@ -1,0 +1,110 @@
+- name: Inicjalizacja pierwszego serwera K3s z embedded etcd
+  hosts: k3s01
+  become: true
+
+  tasks:
+    - name: Sprawdz czy K3s jest juz zainstalowany
+      ansible.builtin.stat:
+        path: /etc/systemd/system/k3s.service
+      register: k3s_service
+
+    - name: Zapisz konfiguracje pierwszego serwera
+      ansible.builtin.copy:
+        dest: /etc/rancher/k3s/config.yaml
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          token: "{{ k3s_token }}"
+
+          cluster-init: true
+
+          node-name: "{{ inventory_hostname }}"
+          node-ip: "{{ ansible_host }}"
+          advertise-address: "{{ ansible_host }}"
+
+          tls-san:
+            - "{{ k3s_api_vip }}"
+            - "{{ k3s_api_fqdn }}"
+            - "{{ ansible_host }}"
+
+          tls-san-security: true
+
+          cluster-cidr: "{{ k3s_cluster_cidr }}"
+          service-cidr: "{{ k3s_service_cidr }}"
+          cluster-dns: "{{ k3s_cluster_dns }}"
+
+          flannel-backend: "vxlan"
+
+          disable:
+            - traefik
+            - servicelb
+
+          secrets-encryption: true
+          selinux: true
+
+          write-kubeconfig-mode: "0640"
+          write-kubeconfig-group: "k3s-admin"
+
+          etcd-snapshot-schedule-cron: "0 */6 * * *"
+          etcd-snapshot-retention: 14
+      register: k3s_config
+      no_log: true
+
+    - name: Pobierz oficjalny instalator K3s
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: /usr/local/src/install-k3s.sh
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Zainstaluj przypieta wersje K3s
+      ansible.builtin.command:
+        cmd: /usr/local/src/install-k3s.sh
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+        INSTALL_K3S_EXEC: "server"
+      when: not k3s_service.stat.exists
+      no_log: true
+
+    - name: Zrestartuj K3s po zmianie konfiguracji
+      ansible.builtin.systemd:
+        name: k3s
+        state: restarted
+        daemon_reload: true
+      when:
+        - k3s_service.stat.exists
+        - k3s_config.changed
+
+    - name: Uruchom i wlacz K3s
+      ansible.builtin.systemd:
+        name: k3s
+        state: started
+        enabled: true
+        daemon_reload: true
+
+    - name: Poczekaj na Kubernetes API
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 6443
+        timeout: 300
+
+    - name: Poczekaj na gotowosc pierwszego noda
+      ansible.builtin.command:
+        cmd: >-
+          k3s kubectl wait
+          --for=condition=Ready
+          node/{{ inventory_hostname }}
+          --timeout=300s
+      changed_when: false
+
+    - name: Pokaz wersje K3s
+      ansible.builtin.command:
+        cmd: k3s --version
+      register: k3s_version_result
+      changed_when: false
+
+    - name: Wynik instalacji
+      ansible.builtin.debug:
+        var: k3s_version_result.stdout_lines

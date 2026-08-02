@@ -1,0 +1,120 @@
+- name: Przygotowanie systemow pod klaster K3s
+  hosts: k3s_servers
+  become: true
+
+  tasks:
+    - name: Sprawdz czy ansible_host jest ustawiony
+      ansible.builtin.assert:
+        that:
+          - ansible_host is defined
+          - ansible_host | length > 0
+        fail_msg: "Brak ansible_host dla {{ inventory_hostname }}"
+
+    - name: Zainstaluj pakiety wymagane przez K3s
+      ansible.builtin.dnf:
+        name:
+          - curl
+          - jq
+          - tar
+          - gzip
+          - iproute
+          - iputils
+          - kernel-modules-extra
+          - container-selinux
+          - policycoreutils
+          - selinux-policy-targeted
+        state: present
+        update_cache: true
+
+    - name: Wylacz swap
+      ansible.builtin.command:
+        cmd: swapoff -a
+      when: (ansible_facts["swaptotal_mb"] | default(0) | int) > 0
+      changed_when: true
+
+    - name: Wylacz wpisy swap w fstab
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: '^([^#].*\s+swap\s+.*)$'
+        replace: '# \1'
+
+    - name: Zapisz moduly wymagane przez kontenery
+      ansible.builtin.copy:
+        dest: /etc/modules-load.d/k3s.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          overlay
+          br_netfilter
+          nf_conntrack
+          ip_tables
+          iptable_nat
+
+    - name: Zaladuj moduly kernela
+      community.general.modprobe:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - overlay
+        - br_netfilter
+        - nf_conntrack
+        - ip_tables
+        - iptable_nat
+
+    - name: Skonfiguruj sysctl dla routingu kontenerow
+      ansible.posix.sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        sysctl_file: /etc/sysctl.d/90-k3s.conf
+        reload: true
+      loop:
+        - name: net.ipv4.ip_forward
+          value: "1"
+        - name: net.bridge.bridge-nf-call-iptables
+          value: "1"
+        - name: net.bridge.bridge-nf-call-ip6tables
+          value: "1"
+
+    - name: Wylacz firewalld
+      ansible.builtin.systemd:
+        name: firewalld
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Utworz grupe administratorow K3s
+      ansible.builtin.group:
+        name: k3s-admin
+        state: present
+
+    - name: Utworz katalog konfiguracji K3s
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        state: directory
+        owner: root
+        group: root
+        mode: "0750"
+
+    - name: Sprawdz synchronizacje czasu
+      ansible.builtin.command:
+        cmd: timedatectl show --property=NTPSynchronized --value
+      register: ntp_status
+      changed_when: false
+
+    - name: Zweryfikuj synchronizacje czasu
+      ansible.builtin.assert:
+        that:
+          - ntp_status.stdout | trim == "yes"
+        fail_msg: "Czas na {{ inventory_hostname }} nie jest zsynchronizowany."
+
+    - name: Sprawdz SELinux
+      ansible.builtin.command:
+        cmd: getenforce
+      register: selinux_status
+      changed_when: false
+
+    - name: Pokaz stan SELinux
+      ansible.builtin.debug:
+        msg: "SELinux na {{ inventory_hostname }}: {{ selinux_status.stdout }}"

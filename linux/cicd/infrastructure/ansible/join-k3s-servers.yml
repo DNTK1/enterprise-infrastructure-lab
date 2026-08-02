@@ -1,0 +1,196 @@
+- name: Dolaczenie k3s02 i k3s03 do klastra K3s HA
+  hosts: "k3s_servers:!k3s01"
+  become: true
+  serial: 1
+
+  vars:
+    k3s_config_path: "/etc/rancher/k3s/config.yaml"
+    k3s_installer_path: "/usr/local/src/install-k3s.sh"
+
+  pre_tasks:
+    - name: Sprawdz wymagane zmienne
+      ansible.builtin.assert:
+        that:
+          - k3s_token is defined
+          - k3s_token | length > 0
+          - k3s_version is defined
+          - k3s_bootstrap_ip is defined
+          - ansible_host is defined
+        fail_msg: "Brakuje wymaganych zmiennych K3s."
+        success_msg: "Zmienne K3s sa dostepne."
+      no_log: true
+
+    - name: Sprawdz dostep do Kubernetes API na k3s01
+      ansible.builtin.wait_for:
+        host: "{{ k3s_bootstrap_ip }}"
+        port: 6443
+        state: started
+        timeout: 30
+
+    - name: Sprawdz czy node nie nalezy juz do klastra
+      ansible.builtin.command:
+        cmd: >-
+          k3s kubectl get node {{ inventory_hostname }}
+          --no-headers
+      delegate_to: k3s01
+      register: existing_node
+      changed_when: false
+      failed_when: false
+
+    - name: Pokaz informacje o istniejacym nodzie
+      ansible.builtin.debug:
+        msg: >-
+          Node {{ inventory_hostname }} jest juz widoczny w klastrze.
+          Playbook sprawdzi jego konfiguracje i usluge.
+      when: existing_node.rc == 0
+
+  tasks:
+    - name: Utworz katalog konfiguracji K3s
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        state: directory
+        owner: root
+        group: root
+        mode: "0750"
+
+    - name: Utworz katalog dla instalatora
+      ansible.builtin.file:
+        path: /usr/local/src
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Sprawdz czy usluga K3s jest zainstalowana
+      ansible.builtin.stat:
+        path: /etc/systemd/system/k3s.service
+      register: k3s_service
+
+    - name: Zapisz konfiguracje serwera dolaczajacego
+      ansible.builtin.copy:
+        dest: "{{ k3s_config_path }}"
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          server: "https://{{ k3s_bootstrap_ip }}:6443"
+          token: "{{ k3s_token }}"
+
+          node-name: "{{ inventory_hostname }}"
+          node-ip: "{{ ansible_host }}"
+          advertise-address: "{{ ansible_host }}"
+
+          tls-san:
+            - "{{ k3s_api_vip }}"
+            - "{{ k3s_api_fqdn }}"
+            - "{{ ansible_host }}"
+
+          tls-san-security: true
+
+          cluster-cidr: "{{ k3s_cluster_cidr }}"
+          service-cidr: "{{ k3s_service_cidr }}"
+          cluster-dns: "{{ k3s_cluster_dns }}"
+
+          flannel-backend: "vxlan"
+
+          disable:
+            - traefik
+            - servicelb
+
+          secrets-encryption: true
+          selinux: true
+
+          write-kubeconfig-mode: "0640"
+          write-kubeconfig-group: "k3s-admin"
+
+          etcd-snapshot-schedule-cron: "0 */6 * * *"
+          etcd-snapshot-retention: 14
+      register: k3s_config
+      no_log: true
+
+    - name: Pobierz oficjalny instalator K3s
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: "{{ k3s_installer_path }}"
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Zainstaluj przypieta wersje K3s Server
+      ansible.builtin.command:
+        cmd: "{{ k3s_installer_path }}"
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+        INSTALL_K3S_EXEC: "server"
+      when: not k3s_service.stat.exists
+      no_log: true
+
+    - name: Przeladuj konfiguracje systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Zrestartuj K3s po zmianie konfiguracji
+      ansible.builtin.systemd:
+        name: k3s
+        state: restarted
+        enabled: true
+      when:
+        - k3s_service.stat.exists
+        - k3s_config.changed
+
+    - name: Uruchom i wlacz usluge K3s
+      ansible.builtin.systemd:
+        name: k3s
+        state: started
+        enabled: true
+
+    - name: Poczekaj na lokalny port Kubernetes API
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 6443
+        state: started
+        timeout: 300
+
+    - name: Poczekaj az node pojawi sie w klastrze
+      ansible.builtin.command:
+        cmd: >-
+          k3s kubectl get node {{ inventory_hostname }}
+          --no-headers
+      delegate_to: k3s01
+      register: node_present
+      changed_when: false
+      retries: 30
+      delay: 10
+      until: node_present.rc == 0
+
+    - name: Poczekaj az node uzyska status Ready
+      ansible.builtin.command:
+        cmd: >-
+          k3s kubectl wait
+          --for=condition=Ready
+          node/{{ inventory_hostname }}
+          --timeout=300s
+      delegate_to: k3s01
+      changed_when: false
+
+    - name: Sprawdz wersje K3s
+      ansible.builtin.command:
+        cmd: k3s --version
+      register: installed_k3s_version
+      changed_when: false
+
+    - name: Pokaz wersje K3s
+      ansible.builtin.debug:
+        var: installed_k3s_version.stdout_lines
+
+    - name: Pokaz status noda
+      ansible.builtin.command:
+        cmd: >-
+          k3s kubectl get node {{ inventory_hostname }} -o wide
+      delegate_to: k3s01
+      register: joined_node
+      changed_when: false
+
+    - name: Wynik dolaczenia noda
+      ansible.builtin.debug:
+        var: joined_node.stdout_lines

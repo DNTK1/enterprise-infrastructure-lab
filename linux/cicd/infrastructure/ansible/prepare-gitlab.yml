@@ -1,0 +1,131 @@
+- name: Przygotowanie GitLab CE
+  hosts: gitlab
+  become: true
+
+  vars:
+    lab_domain: "DOMENA.LAB"
+    gitlab_fqdn: "gitlab.{{ lab_domain }}"
+    registry_fqdn: "registry.{{ lab_domain }}"
+    gitlab_image: "gitlab/gitlab-ce:19.2.0-ce.0"
+    pki_source_dir: "/home/roo/pki/gitlab"
+
+  tasks:
+    - name: Utworz katalogi GitLaba
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "{{ item.mode }}"
+      loop:
+        - path: /srv/gitlab
+          mode: "0755"
+        - path: /srv/gitlab/compose
+          mode: "0700"
+        - path: /srv/gitlab/config
+          mode: "0755"
+        - path: /srv/gitlab/config/ssl
+          mode: "0700"
+        - path: /srv/gitlab/config/trusted-certs
+          mode: "0755"
+        - path: /srv/gitlab/logs
+          mode: "0755"
+        - path: /srv/gitlab/data
+          mode: "0755"
+
+    - name: Skopiuj certyfikat serwera
+      ansible.builtin.copy:
+        src: "{{ pki_source_dir }}/{{ gitlab_fqdn }}.crt"
+        dest: "/srv/gitlab/config/ssl/{{ gitlab_fqdn }}.crt"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Skopiuj klucz prywatny serwera
+      ansible.builtin.copy:
+        src: "{{ pki_source_dir }}/{{ gitlab_fqdn }}.key"
+        dest: "/srv/gitlab/config/ssl/{{ gitlab_fqdn }}.key"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+
+    - name: Skopiuj CA do magazynu zaufanych certyfikatow GitLaba
+      ansible.builtin.copy:
+        src: "{{ pki_source_dir }}/lab-root-ca.crt"
+        dest: /srv/gitlab/config/trusted-certs/domowy-lab-root-ca.crt
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Utworz plik Compose GitLaba
+      ansible.builtin.copy:
+        dest: /srv/gitlab/compose/compose.yaml
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          services:
+            gitlab:
+              image: "{{ gitlab_image }}"
+              container_name: gitlab
+              hostname: "{{ gitlab_fqdn }}"
+              restart: always
+
+              environment:
+                GITLAB_OMNIBUS_CONFIG: |
+                  external_url 'https://{{ gitlab_fqdn }}'
+                  registry_external_url 'https://{{ registry_fqdn }}'
+
+                  gitlab_rails['monitoring_whitelist'] = [
+                    '127.0.0.0/8',
+                    '10.10.0.0/24',
+                    '172.16.0.0/12'
+                  ]
+
+                  letsencrypt['enable'] = false
+
+                  nginx['ssl_certificate'] = '/etc/gitlab/ssl/{{ gitlab_fqdn }}.crt'
+                  nginx['ssl_certificate_key'] = '/etc/gitlab/ssl/{{ gitlab_fqdn }}.key'
+                  nginx['redirect_http_to_https'] = true
+
+                  registry_nginx['ssl_certificate'] = '/etc/gitlab/ssl/{{ gitlab_fqdn }}.crt'
+                  registry_nginx['ssl_certificate_key'] = '/etc/gitlab/ssl/{{ gitlab_fqdn }}.key'
+                  registry_nginx['redirect_http_to_https'] = true
+
+                  gitlab_rails['gitlab_shell_ssh_port'] = 2222
+
+                  puma['worker_processes'] = 0
+                  sidekiq['concurrency'] = 10
+
+                  alertmanager['enable'] = false
+                  gitlab_exporter['enable'] = false
+                  gitlab_kas['enable'] = false
+                  node_exporter['enable'] = false
+                  postgres_exporter['enable'] = false
+                  prometheus_monitoring['enable'] = false
+                  prometheus['enable'] = false
+                  puma['exporter_enabled'] = false
+                  redis_exporter['enable'] = false
+                  sidekiq['metrics_enabled'] = false
+
+                  gitlab_rails['env'] = {
+                    'MALLOC_CONF' => 'dirty_decay_ms:1000,muzzy_decay_ms:1000'
+                  }
+
+                  gitaly['env'] = {
+                    'MALLOC_CONF' => 'dirty_decay_ms:1000,muzzy_decay_ms:1000',
+                    'GITALY_COMMAND_SPAWN_MAX_PARALLEL' => '2'
+                  }
+
+              ports:
+                - "80:80"
+                - "443:443"
+                - "2222:22"
+
+              volumes:
+                - /srv/gitlab/config:/etc/gitlab:Z
+                - /srv/gitlab/logs:/var/log/gitlab:Z
+                - /srv/gitlab/data:/var/opt/gitlab:Z
+
+              shm_size: "256m"

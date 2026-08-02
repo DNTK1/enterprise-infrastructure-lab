@@ -1,0 +1,23 @@
+- name: Otwieranie portow na firewallu
+  hosts: all
+
+  tasks:
+    - name: Open portow na firewallu (service)
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+      loop:
+        - http
+        - https
+
+    - name: Open portow na firewallu (port)
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+      loop:
+        - 8080/tcp
+        - 445/tcp
