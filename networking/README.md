@@ -22,7 +22,7 @@ VLANy są już dodane i działają poprawnie, natomiast przez ten problem cała 
 W przyszłości do poprawy, na ten moment tak zostaje, ponieważ zmiana adresacji nie jest tak prosta i może spowodować dużo różnych losowych problemów.
 
 | VLAN | Nazwa zakresu DHCP | Podsieć | Pula DHCP |
-|---:|---|---|---|---|---|
+|---:|---|---|---|
 | 10 | `DefaultVLAN10` | `10.10.0.0/24` | `10.10.0.120–220` |
 | 20 | `ServersVLAN20` | `10.20.0.0/24` | `10.20.0.100–200` |
 | 30 | `ClientsVLAN30` | `10.30.0.0/24` | `10.30.0.100–250` |
