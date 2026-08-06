@@ -25,3 +25,27 @@ Możliwy fix to przekazanie osobnej karty sieciowej USB dla zagnieżdzonego Prox
 # FIXED
 
 Problem rozwiązało dodanie dodatkowych karty sieciowych USB dla każdego noda, następnie przekazanie ich bezpośrednio w VMware dla Proxmoxa.
+
+# Dodanie osobnych kart sieciowych do VMWare Workstation
+
+Karty muszą być zapamiętane dla każdego noda osobna w tym celu trzeba przekazać kartę po USB w VMWare (VM -> Removable devices).
+Po dodaniu komendą w powershellu można sprawdzić jej path, u mnie np. 1/2/1:
+
+```
+Select-String -Path .\vmware.log -Pattern "vid:0bda pid:8156" | Select-Object -Last 5
+```
+
+Następnie trzeba wyłączyć VM i w .vmx dopisać (zależnie od path):
+
+```
+usb.autoConnect.device0 = "vid:0bda pid:8156 path:1/2/1 autoclean:0"
+```
+
+Dla każdej VM to samo, następnie Proxmox:
+
+```
+lsusb | grep 0bda:8156
+ip -br link | grep enx
+```
+
+Następnie trzeba dodać nowy bridge w Proxmoxie i nazwa bridge ports będzie w poprzedniej komendy np. enx18694503a656
