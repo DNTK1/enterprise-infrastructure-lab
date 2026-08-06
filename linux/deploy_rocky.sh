@@ -3,8 +3,14 @@
 set -Eeuo pipefail
 
 # Rocky Linux Cloud Deploy
-# Proxmox + Ceph RBD + Cloud-init
 
+if (( $# < 7 )); then
+    echo "Usage:"
+    echo "$0 <VMID> <nazwa> <RAM_MB> <vCPU> <dysk_GB> <VLAN> <PASSWORD>"
+	echo "Example:"
+    echo "$0 160 rocky-test01 2048 2 30 20 Testpass1!"
+    exit 1
+fi
 
 VMID=${1:-}
 HOSTNAME=${2:-}
@@ -13,15 +19,6 @@ CORES=${4:-}
 DISK=${5:-}
 VLAN=${6:-}
 ROOT_PASSWORD="${7:-}"
-
-if [[ -z "$VMID" || -z "$HOSTNAME" ]]; then
-
-    echo "Usage:"
-    echo "$0 VMID hostname"
-
-    exit 1
-
-fi
 
 # CONFIG
 
@@ -114,7 +111,8 @@ echo
 
 echo "[1/10] Tworzenie VM"
 
-if [ $VLAN != 10 ] ; then
+# Chwilowo tak musi zostac - "vlan10" to główa sieć, bez taga vlana - do sfixowania
+if [[ "$VLAN" != "10" ]]; then
 qm create "$VMID" \
 --name "$HOSTNAME" \
 --memory "$RAM" \
@@ -226,20 +224,26 @@ echo "Czekam na DHCP..."
 IP=""
 
 
-while [[ -z "$IP" ]]
-do
+max_attempts=20
+attempt=0
 
+while [[ -z "$IP" && $attempt -lt $max_attempts ]]; do
     sleep 10
-
+    ((++attempt))
 
     IP=$(qm guest cmd "$VMID" network-get-interfaces 2>/dev/null \
-    | grep -oE "10\.${VLAN}\.0\.[0-9]+" \
-    | head -1 || true)
+        | grep -oE "10\.${VLAN}\.0\.[0-9]+" \
+        | head -1 || true)
 
-
-    echo "..."
-
+    echo "... próba $attempt/$max_attempts"
 done
+
+if [[ -z "$IP" ]]; then
+	qm set "$VMID" \
+	--name "${HOSTNAME}-DHCPERROR"
+    echo "Nie udało się pobrać adresu IP z DHCP."
+    exit 1
+fi
 
 
 
@@ -282,49 +286,33 @@ done
 
 
 echo
-echo "Konfiguracja root i Ansible SSH key..."
+echo "Konfiguracja systemu"
 
 
 
 ssh \
 -o StrictHostKeyChecking=no \
 rocky@"$IP" \
-"sudo bash -s" <<EOF
-
+"sudo bash -Eeuo pipefail -s" <<EOF
 
 echo 'root:$ROOT_PASSWORD' | chpasswd
 
+mkdir -p /home/rocky/.ssh
 
-mkdir -p /root/.ssh
-
-
-cp /home/rocky/.ssh/authorized_keys \
-/root/.ssh/authorized_keys
-
-
-
-cat >> /root/.ssh/authorized_keys <<KEY
-
+cat >> /home/rocky/.ssh/authorized_keys <<KEY
 $(cat "$ANSIBLE_KEY")
-
 KEY
 
+chown -R rocky:rocky /home/rocky/.ssh
+chmod 700 /home/rocky/.ssh
+chmod 600 /home/rocky/.ssh/authorized_keys
 
+cat > /etc/ssh/sshd_config.d/00-disable-root-login.conf <<CONFIG
+PermitRootLogin no
+CONFIG
 
-chmod 700 /root/.ssh
-
-chmod 600 /root/.ssh/authorized_keys
-
-
-
-sed -i \
-'s/^#PermitRootLogin.*/PermitRootLogin yes/' \
-/etc/ssh/sshd_config
-
-
-
+sshd -t
 systemctl restart sshd
-
 
 EOF
 
@@ -354,11 +342,6 @@ echo "$IP"
 echo
 
 echo "SSH:"
-echo "root@$IP"
-
-echo
-
-echo "Hasło awaryjne:"
-echo "$ROOT_PASSWORD"
+echo "rocky@$IP"
 
 echo
