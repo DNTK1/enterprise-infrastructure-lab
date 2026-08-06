@@ -3,13 +3,13 @@
 ## Nody
 
 - `Lab1`–`Lab3` działają w VMware Workstation na jednym komputerze AMD Ryzen;
-- `Lab4` i `Lab5` to dwa fizyczne komputery Intel.
+- `Lab4` i `Lab5` to dwa osobne fizyczne komputery Intel.
 
 | Node | Platforma | RAM | CPU |
 |---|---|---:|---:|
-| `Lab1` | VMware / AMD Ryzen | 16 GiB | 5 vCPU |
-| `Lab2` | VMware / AMD Ryzen | 16 GiB | 5 vCPU |
-| `Lab3` | VMware / AMD Ryzen | 16 GiB | 5 vCPU |
+| `Lab1` | VMware / AMD Ryzen 9800X3D | 16 GiB | 5 vCPU |
+| `Lab2` | VMware / AMD Ryzen 9800X3D | 16 GiB | 5 vCPU |
+| `Lab3` | VMware / AMD Ryzen 9800X3D | 16 GiB | 5 vCPU |
 | `Lab4` | fizyczny Intel i5-7600 | 16 GiB | 4 rdzenie |
 | `Lab5` | fizyczny Intel i5-7600 | 16 GiB | 4 rdzenie |
 

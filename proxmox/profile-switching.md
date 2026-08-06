@@ -1,6 +1,6 @@
 # Przełączanie profilu Windows i CI/CD
 
-Lab ma za mało RAM, żeby wygodnie uruchamiać wszystkie maszyny jednocześnie.
+Lab ma za mało RAM, żeby utrzymywać wszystkie maszyny włączone.
 Cztery krótkie skrypty zmieniają stan VM w Proxmox HA.
 
 ## Listy VM

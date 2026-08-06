@@ -15,8 +15,7 @@ Obie sieci są ustawione ręcznie jako bridged. VMware nie korzysta z opcji
 
 ## Ustawienia hosta
 
-W UEFI jest włączone AMD-V/SVM. W ustawieniach każdej VM Proxmox jest też
-włączone przekazywanie wirtualizacji sprzętowej do gościa.
+W UEFI jest włączone AMD-V/SVM.
 
 Na hoście Windows wyłączone są:
 
