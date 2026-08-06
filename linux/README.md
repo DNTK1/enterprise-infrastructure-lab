@@ -5,7 +5,7 @@ konfiguracji używam prostego skryptu Bash, cloud-init oraz Ansible.
 
 | Katalog | Co zawiera |
 |---|---|
-| [deploy_rocky.sh](deploy-rocky.sh) | skrypt tworzący nową VM Rocky Linux |
+| [deploy_rocky.sh](deploy_rocky.sh) | skrypt tworzący nową VM Rocky Linux |
 | [ansible/](ansible/) | proste playbooki administracyjne i Zabbix Agent 2 |
 | [cicd/](cicd/) | GitLab, Jenkins, K3s i testowa aplikacja SecureHash |
 
