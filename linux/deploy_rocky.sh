@@ -20,6 +20,11 @@ DISK=${5:-}
 VLAN=${6:-}
 ROOT_PASSWORD="${7:-}"
 
+if [[ -z "$ROOT_PASSWORD" ]]; then
+    echo "Hasło nie może być puste."
+    exit 1
+fi
+
 # CONFIG
 
 CEPH="RBD-POOL"
@@ -269,18 +274,25 @@ qm set "$VMID" \
 echo
 echo "Czekam SSH..."
 
-
+attempt=0
 until ssh \
 -o StrictHostKeyChecking=no \
 -o ConnectTimeout=5 \
 rocky@"$IP" hostname
-
 do
+    ((++attempt))
 
-    echo "SSH niedostępny..."
+    echo "SSH niedostępny... próba $attempt/$max_attempts"
+
+    if (( attempt >= max_attempts )); then
+        qm set "$VMID" \
+        --name "${HOSTNAME}-SSHERROR"
+
+        echo "Nie udało się połączyć przez SSH."
+        exit 1
+    fi
 
     sleep 10
-
 done
 
 
@@ -292,6 +304,7 @@ echo "Konfiguracja systemu"
 
 ssh \
 -o StrictHostKeyChecking=no \
+-o ConnectTimeout=5 \
 rocky@"$IP" \
 "sudo bash -Eeuo pipefail -s" <<EOF
 
@@ -307,6 +320,7 @@ chown -R rocky:rocky /home/rocky/.ssh
 chmod 700 /home/rocky/.ssh
 chmod 600 /home/rocky/.ssh/authorized_keys
 
+mkdir -p /etc/ssh/sshd_config.d
 cat > /etc/ssh/sshd_config.d/00-disable-root-login.conf <<CONFIG
 PermitRootLogin no
 CONFIG
