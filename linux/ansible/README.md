@@ -3,7 +3,7 @@
 Playbooki są uruchamiane z maszyny `RockyGUIAnsible`. Służą do zwykłych prac
 na serwerach Rocky Linux oraz do instalacji elementów platformy CI/CD.
 
-## Proste playbooki
+## Playbooki
 
 | Playbook | Co robi |
 |---|---|
@@ -11,14 +11,10 @@ na serwerach Rocky Linux oraz do instalacji elementów platformy CI/CD.
 | `playbooks/dnfinstalltools.yml` | instaluje narzędzia administracyjne |
 | `playbooks/firewallportopen.yml` | otwiera wybrane porty w firewalld |
 | `playbooks/firewallportclose.yml` | zamyka te same porty |
+| `playbooks/Zabbixclientinstall.yml` | instaluje agenta i konfiguruje go razem z firewallem |
 
 Przykład:
 
 ```bash
-ansible-playbook -i inventory.ini playbooks/dnfupdate.yml
+ansible-playbook Zabbixclientinstall.yml
 ```
-
-## Zabbix Agent 2
-
-Playbook `zabbix/Zabbixclientinstall.yml` instaluje agenta, wpisuje adres serwera
-Zabbix, ustawia nazwę hosta, otwiera port `10050/tcp` i uruchamia usługę.
