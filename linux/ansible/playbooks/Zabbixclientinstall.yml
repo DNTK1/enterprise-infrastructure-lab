@@ -26,6 +26,7 @@
           - policycoreutils-python-utils
         state: present
 
+
     - name: Add Zabbix repository
       ansible.builtin.yum_repository:
         name: zabbix
@@ -55,12 +56,14 @@
         disable_gpg_check: yes
       ignore_errors: yes
 
+
     - name: Configure Zabbix Server
       ansible.builtin.lineinfile:
         path: /etc/zabbix/zabbix_agent2.conf
         regexp: '^Server='
         line: "Server={{ zabbix_server }}"
         backup: yes
+
 
     - name: Configure Zabbix Active Server
       ansible.builtin.lineinfile:
@@ -83,11 +86,13 @@
         line: "Hostname={{ system_hostname.stdout }}"
         backup: yes
 
+
     - name: Validate Zabbix Agent configuration
       ansible.builtin.command:
         cmd: zabbix_agent2 -t agent.hostname
       register: agent_test
       changed_when: false
+
 
     - name: Show agent hostname test
       ansible.builtin.debug:
@@ -98,6 +103,7 @@
         name: firewalld
         enabled: yes
         state: started
+
 
     - name: Open Zabbix Agent port
       ansible.posix.firewalld:
@@ -117,6 +123,7 @@
         name: zabbix-agent2
       register: zabbix_service
 
+
     - name: Show service state
       ansible.builtin.debug:
         msg:
@@ -129,6 +136,7 @@
       register: port_check
       changed_when: false
       failed_when: false
+
 
     - name: Show port status
       ansible.builtin.debug:

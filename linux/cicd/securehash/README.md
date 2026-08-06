@@ -1,4 +1,4 @@
-# SecureHash Lab — etap Docker Compose
+# Testowa aplikacja SecureHash
 
 ## Uruchomienie
 
