@@ -16,5 +16,5 @@ na serwerach Rocky Linux oraz do instalacji elementów platformy CI/CD.
 Przykład:
 
 ```bash
-ansible-playbook Zabbixclientinstall.yml
+ansible-playbook playbooks/Zabbixclientinstall.yml
 ```
