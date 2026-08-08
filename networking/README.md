@@ -17,7 +17,7 @@ klastrem. DNS i DHCP działają na kontrolerach domeny Windows.
 
 ## VLAN
 
-Problem z VLANami opisany w [/troubleshooting/vlan-nested-virtualization.md](/troubleshooting/vlan-nested-virtualization.md).
+Problem z VLANami opisany w [troubleshooting/vlan-nested-virtualization.md](/troubleshooting/vlan-nested-virtualization.md).
 VLANy są już dodane i działają poprawnie, natomiast przez ten problem cała sieć od poczatku była tworzona na głównym nieotagowanym lanie (10).
 W przyszłości do poprawy, na ten moment tak zostaje, ponieważ zmiana adresacji nie jest tak prosta i może spowodować dużo różnych losowych problemów.
 
