@@ -10,4 +10,4 @@ uruchomione są:
 
 Do Zabbixa są dodane wszystkie serwery Windows oraz `RockyGUIAnsible`.
 Agenty na maszynach Rocky Linux można instalować playbookiem Ansible z
-[`linux/ansible/zabbix/`](../linux/ansible/zabbix/).
+[`linux/ansible/playbooks/Zabbixclientinstall.yml`](../linux/ansible/playbooks/Zabbixclientinstall.yml).
