@@ -1,14 +1,13 @@
 #!/bin/bash
-
 set -Eeuo pipefail
 
 # Rocky Linux Cloud Deploy
 
-if (( $# < 7 )); then
+if (( $# < 6 )); then
     echo "Usage:"
-    echo "$0 <VMID> <nazwa> <RAM_MB> <vCPU> <dysk_GB> <VLAN> <PASSWORD>"
+    echo "$0 <VMID> <nazwa> <RAM_MB> <vCPU> <dysk_GB> <VLAN>"
 	echo "Example:"
-    echo "$0 160 rocky-test01 2048 2 30 20 Testpass1!"
+    echo "$0 160 rocky-test01 2048 2 30 20"
     exit 1
 fi
 
@@ -18,14 +17,10 @@ RAM=${3:-}
 CORES=${4:-}
 DISK=${5:-}
 VLAN=${6:-}
-ROOT_PASSWORD="${7:-}"
 
-if [[ -z "$ROOT_PASSWORD" ]]; then
-    echo "Hasło nie może być puste."
-    exit 1
-fi
 
 # CONFIG
+
 
 CEPH="RBD-POOL"
 
@@ -117,6 +112,7 @@ echo
 echo "[1/10] Tworzenie VM"
 
 # Chwilowo tak musi zostac - "vlan10" to główa sieć, bez taga vlana - do sfixowania
+
 if [[ "$VLAN" != "10" ]]; then
 qm create "$VMID" \
 --name "$HOSTNAME" \
@@ -233,7 +229,7 @@ max_attempts=20
 attempt=0
 
 while [[ -z "$IP" && $attempt -lt $max_attempts ]]; do
-    sleep 10
+    sleep 5
     ((++attempt))
 
     IP=$(qm guest cmd "$VMID" network-get-interfaces 2>/dev/null \
@@ -292,7 +288,7 @@ do
         exit 1
     fi
 
-    sleep 10
+    sleep 5
 done
 
 
@@ -357,5 +353,6 @@ echo
 
 echo "SSH:"
 echo "rocky@$IP"
+echo "rocky@$HOSTNAME"
 
 echo
