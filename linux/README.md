@@ -31,7 +31,6 @@ Przykład:
 | `RockyGUIAnsible` | maszyna administracyjna z Ansible |
 | `RockyZabbix` | Zabbix Server, PostgreSQL i panel webowy |
 | `RockyVPN` | Tailscale |
-| `PKI-WEB01` | Nginx z AIA i CRL |
 | `gitlab01` | GitLab CE i Container Registry |
 | `jenkins01` | Jenkins Controller |
 | `build01` | Jenkins Agent, Docker, Trivy i kubectl |
