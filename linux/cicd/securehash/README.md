@@ -1,6 +1,10 @@
-# Testowa aplikacja SecureHash
+# SecureHash
 
-## Uruchomienie
+Testowa aplikacja składająca się z backendu FastAPI oraz frontendu React. Projekt został przygotowany do nauki budowy pipeline'u CI/CD z wykorzystaniem Jenkinsa, Dockera, GitLab Container Registry i K3s.
+
+Aplikacja pozwala podać tekst i wygenerować jego hash bcrypt.
+
+## Uruchomienie lokalne
 
 ```bash
 docker compose config
@@ -9,39 +13,39 @@ docker compose up -d
 docker compose ps
 ```
 
-Aplikacja: `http://ADRES_BUILD01:8080`
-
-## Testy
+Zatrzymanie:
 
 ```bash
-curl -fsS http://127.0.0.1:8080/healthz
-curl -fsS http://127.0.0.1:8080/api/health | jq
-curl -fsS -X POST http://127.0.0.1:8080/api/hash \
-  -H 'Content-Type: application/json' \
-  -d '{"password":"Lab-Test-123!"}' | jq
-```
-
-## Logi i zatrzymanie
-
-```bash
-docker compose logs --tail=100
 docker compose down
 ```
 
-## Quality gate
+## Quality Gate
 
 ```bash
 ./scripts/quality-gate.sh
 ```
 
-Skrypt sprawdza Compose, uruchamia testy i coverage backendu, lint obu części oraz buduje obrazy.
+Skrypt sprawdza konfigurację Docker Compose, uruchamia testy i lint oraz buduje obrazy backendu i frontendu.
 
-## Security scan
-
-Po instalacji Trivy:
+## Security Scan
 
 ```bash
 ./scripts/security-scan.sh
 ```
 
-Raporty są zapisywane w katalogu `reports/`.
+Trivy sprawdza repozytorium oraz obrazy aplikacji. Raporty zapisywane są w katalogu `reports/`.
+
+## Pipeline
+
+W Jenkinsie projekt przechodzi przez:
+
+```text
+kod
+→ testy i lint
+→ budowa obrazów
+→ Trivy
+→ GitLab Container Registry
+→ K3s
+```
+
+Deployment do K3s wykonywany jest dla brancha `main`.

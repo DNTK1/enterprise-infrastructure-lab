@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: securehash-status
+  namespace: status-page
+  labels:
+    app: securehash-status
+
+spec:
+  ingressClassName: nginx
+
+  rules:
+    - host: status.domena.lab
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: securehash-status
+                port:
+                  number: 80

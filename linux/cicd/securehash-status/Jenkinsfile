@@ -1,0 +1,215 @@
+pipeline {
+    agent {
+        label 'docker'
+    }
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        skipDefaultCheckout(true)
+
+        gitLabConnection('gitlab-lab')
+
+        gitlabBuilds(
+            builds: [
+                'quality-gate',
+                'security-scan',
+                'publish-image',
+                'deploy-k3s'
+            ]
+        )
+    }
+
+    environment {
+        REGISTRY = 'registry.domena.lab'
+        IMAGE_REPOSITORY = 'registry.domena.lab/devops-lab/securehash-status/app'
+        LOCAL_IMAGE = 'securehash-status:local'
+    }
+
+    stages {
+        stage('Pobranie kodu') {
+            steps {
+                checkout scm
+
+                script {
+                    env.IMAGE_TAG = sh(
+                        script: 'git rev-parse --short=12 HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    env.GIT_COMMIT_FULL = sh(
+                        script: 'git rev-parse HEAD',
+                        returnStdout: true
+                    ).trim()
+                }
+
+                sh '''
+                    set -Eeuo pipefail
+
+                    echo "Branch: ${BRANCH_NAME:-brak}"
+                    echo "Commit: ${IMAGE_TAG}"
+                    echo "Pełny commit: ${GIT_COMMIT_FULL}"
+                    echo "Agent: ${NODE_NAME}"
+
+                    test -f Dockerfile
+                    test -x scripts/quality-gate.sh
+                    test -x scripts/security-scan.sh
+                    test -x scripts/deploy-k3s.sh
+
+                    echo "OK: wymagane pliki istnieją"
+                '''
+
+                updateGitlabCommitStatus(
+                    name: 'jenkins',
+                    state: 'running'
+                )
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                gitlabCommitStatus(name: 'quality-gate') {
+                    sh '''
+                        set -Eeuo pipefail
+
+                        export GIT_SHA="${IMAGE_TAG}"
+                        export IMAGE_NAME="${LOCAL_IMAGE}"
+
+                        ./scripts/quality-gate.sh
+                    '''
+                }
+            }
+        }
+
+        stage('Skanowanie bezpieczeństwa') {
+            steps {
+                gitlabCommitStatus(name: 'security-scan') {
+                    sh '''
+                        set -Eeuo pipefail
+
+                        ./scripts/security-scan.sh
+                    '''
+                }
+            }
+
+            post {
+                always {
+                    archiveArtifacts(
+                        artifacts: 'reports/*.txt',
+                        allowEmptyArchive: true
+                    )
+                }
+            }
+        }
+
+        stage('Publikacja obrazu') {
+            steps {
+                gitlabCommitStatus(name: 'publish-image') {
+                    script {
+                        if (env.BRANCH_NAME == 'main') {
+
+                            withCredentials([
+                                usernamePassword(
+                                    credentialsId: 'gitlab-deploy-securehash-status',
+                                    usernameVariable: 'REGISTRY_USER',
+                                    passwordVariable: 'REGISTRY_TOKEN'
+                                )
+                            ]) {
+                                sh '''
+                                    set -Eeuo pipefail
+
+                                    REMOTE_IMAGE="${IMAGE_REPOSITORY}:${IMAGE_TAG}"
+                                    export DOCKER_CONFIG="${WORKSPACE}/.docker-registry"
+
+                                    cleanup() {
+                                        docker logout "${REGISTRY}" >/dev/null 2>&1 || true
+                                        rm -rf "${DOCKER_CONFIG}"
+                                    }
+
+                                    trap cleanup EXIT
+
+                                    rm -rf "${DOCKER_CONFIG}"
+                                    mkdir -p "${DOCKER_CONFIG}"
+
+                                    echo "=== KONTROLA OBRAZU LOKALNEGO ==="
+                                    docker image inspect "${LOCAL_IMAGE}" >/dev/null
+
+                                    echo "=== TAGOWANIE OBRAZU ==="
+                                    docker tag \
+                                        "${LOCAL_IMAGE}" \
+                                        "${REMOTE_IMAGE}"
+
+                                    echo "=== LOGOWANIE DO REGISTRY ==="
+                                    printf '%s' "${REGISTRY_TOKEN}" |
+                                        docker login "${REGISTRY}" \
+                                            --username "${REGISTRY_USER}" \
+                                            --password-stdin
+
+                                    echo "=== PUBLIKACJA OBRAZU ==="
+                                    docker push "${REMOTE_IMAGE}"
+
+                                    echo "Opublikowano: ${REMOTE_IMAGE}"
+                                '''
+                            }
+
+                        } else {
+                            echo "Pominięto publikację obrazu: branch ${env.BRANCH_NAME} nie jest main."
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy K3s') {
+            steps {
+                gitlabCommitStatus(name: 'deploy-k3s') {
+                    script {
+                        if (env.BRANCH_NAME == 'main') {
+
+                            withCredentials([
+                                file(
+                                    credentialsId: 'k3s-status-page-kubeconfig',
+                                    variable: 'KUBECONFIG_FILE'
+                                )
+                            ]) {
+                                sh '''
+                                    set -Eeuo pipefail
+
+                                    export KUBECONFIG="${KUBECONFIG_FILE}"
+
+                                    ./scripts/deploy-k3s.sh
+                                '''
+                            }
+
+                        } else {
+                            echo "Pominięto deployment: branch ${env.BRANCH_NAME} nie jest main."
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            updateGitlabCommitStatus(
+                name: 'jenkins',
+                state: 'success'
+            )
+        }
+
+        failure {
+            updateGitlabCommitStatus(
+                name: 'jenkins',
+                state: 'failed'
+            )
+        }
+
+        aborted {
+            updateGitlabCommitStatus(
+                name: 'jenkins',
+                state: 'canceled'
+            )
+        }
+    }
+}

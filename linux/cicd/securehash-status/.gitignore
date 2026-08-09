@@ -1,0 +1,41 @@
+# Środowisko wirtualne Python
+.venv/
+venv/
+
+# Cache i pliki Pythona
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Narzędzia testowe i lint
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Raporty generowane przez pipeline
+reports/
+
+# Pliki środowiskowe
+.env
+.env.*
+
+# Potencjalne sekrety i klucze
+*.key
+*.pem
+*.p12
+*.pfx
+kubeconfig*
+*KUBECONFIG*
+
+# Pliki budowania Pythona
+build/
+dist/
+*.egg-info/
+
+# Edytory
+.vscode/
+.idea/
+
+# System
+.DS_Store
