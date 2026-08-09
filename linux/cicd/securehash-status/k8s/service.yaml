@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: securehash-status
+  namespace: status-page
+  labels:
+    app: securehash-status
+spec:
+  type: ClusterIP
+
+  selector:
+    app: securehash-status
+
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
