@@ -14,12 +14,13 @@ skrypty Proxmox oraz testową aplikację SecureHash z pipeline'em Jenkinsa.
 
 | Ilość | Urządzenie | Procesor | RAM | Dyski | Sieć | Zastosowanie |
 |---:|---|---|---:|---|---|---|
-| 1 | Główny komputer AMD | AMD Ryzen 7 9800X3D | 64 GB | 3 × NVMe SSD; każdy z nodów `Lab1`–`Lab3` ma 200 GiB na system i 460 GiB na OSD Ceph | Realtek 10 GbE dla Ceph oraz Realtek 2.5 GbE dla LAN i zarządzania | VMware Workstation i trzy zagnieżdżone nody Proxmox: `Lab1`, `Lab2`, `Lab3` |
-| 1 | Fujitsu P957 — `Lab4` | Intel Core i5-7600 | 16 GB | HDD 2 TB na Proxmox, SSD 500 GB na Ceph | 1 GbE dla zarządzania, 2.5 GbE dla Ceph | Fizyczny node Proxmox |
-| 1 | Fujitsu P957 — `Lab5` | Intel Core i5-7600 | 16 GB | HDD 500 GB na Proxmox, SSD 500 GB na Ceph | 1 GbE dla zarządzania, 2.5 GbE dla Ceph | Fizyczny node Proxmox |
-| 1 | Komputer TrueNAS | Intel Core i5-2500K | 16 GB | SSD 256 GB na system, 2 × HDD 4 TB w mirrorze | 2.5 GbE | TrueNAS SCALE, zasób SMB i kontener Proxmox Backup Server |
-| 1 | HP EliteDesk 800 G3 — `LabFirewall` | Intel Core i5-6500 | 8 GB | SSD 256 GB | 1 GbE dla zarządzania, 2.5 GbE WAN, 2.5 GbE LAN | Proxmox z maszyną OPNsense |
-| 2 | HORACO HC-SWTGW218AS | — | — | — | 10 GbE, 2.5 GbE i 1 GbE | Jeden switch dla Ceph z MTU 9000, drugi dla głównej sieci i zarządzania |
+| 1 | Główny komputer AMD | AMD Ryzen 7 9800X3D | 64 GB | 3 × NVMe SSD; każdy z nodów `Lab1`–`Lab3` ma 200 GiB na system i 460 GiB na OSD Ceph | 3 x 2.5 GbE dla LAN, 10 GbE dla Ceph oraz 2.5 GbE dla zarządzania | VMware Workstation i trzy zagnieżdżone nody Proxmox: `Lab1`, `Lab2`, `Lab3` |
+| 1 | Fujitsu P957 — `Lab4` | Intel Core i5-7600 | 16 GB | NVMe SSD 128 GB na Proxmox, SSD 500 GB na Ceph | 2.5 GbE dla Ceph, 2.5 GbE dla LAN, 1 GbE dla zarządzania | Fizyczny node Proxmox |
+| 1 | Fujitsu P957 — `Lab5` | Intel Core i5-7600 | 16 GB | NVMe SSD 128 GB na Proxmox, SSD 500 GB na Ceph | 2.5 GbE dla Ceph, 2.5 GbE dla LAN, 1 GbE dla zarządzania | Fizyczny node Proxmox |
+| 1 | HP EliteDesk 800 G3 — `LabFirewall` | Intel Core i5-6500 | 16 GB | SSD 256 GB, 2 TB HDD, 500 GB HDD | 1 GbE dla zarządzania, 2.5 GbE WAN, 2 x 10 GbE LAN | Proxmox z OPNsense, Proxmox Backup Server i zasobem SMB |
+| 1 | Komputer TrueNAS | Intel Core i5-2500K | 16 GB | SSD 256 GB na system, 2 × HDD 4 TB w mirrorze | 2.5 GbE | TrueNAS SCALE, zapasowy zasób SMB i kontener Proxmox Backup Server w innej podsieci |
+| 2 | HORACO HC-SWTGW218AS | — | — | — | 10 GbE, 8 x 2.5 GbE | Jeden switch dla Ceph z MTU 9000, drugi dla głównej sieci VM |
+| 1 | HORACO ZX310S-8T2XS | — | — | — | 2 x 10 GbE, 8 x 2.5 GbE | Switch do sieci management |
 | 1 | Router ASUS AX3600 | — | — | — | 1 GbE i Wi-Fi | Dostęp bezprzewodowy do sieci laboratoryjnej i logowanie przez RADIUS/NPS |
 | 1 | Router FunBox | — | — | — | — | Łącze z Internetem i osobna podsieć, do której jest podłączony host TrueNAS |
 
@@ -128,11 +129,9 @@ Dokładniejszy opis jest w
 
 ## Aktualnie:
 
-- Mimo działającego pipelinu moja wiedza tutaj jest dość ograniczona - nowe środowisko, więc głównie tutaj skupiam się na zmianach, psuciu i naprawianiu
-- W wolnym czasie przygotowuję się do certyfikatu AZ-900 (Azure cloud)
+- Przygotowuję się do certyfikatu AZ-900 (Azure cloud) oraz RHCSA (Red Hat Certified System Administrator)
 
 ## W przyszłości:
 
 - W dalszej przyszłości zamierzam dodać jakiś projekt z użyciem cloud + Terraform
-- Poprawić VLANy wraz z podziałem sieci na Management, VM, Ceph (wymaga zakupu większej ilości kart sieciowych)
-- Zacząć przygotowywać się do certyfikatu RHCSA (Red Hat Certified System Administrator)
+- Do poprawy VLANy wraz z podziałem sieci na Management, VM, Ceph - wymaga zmiany adresacji wielu maszyn
