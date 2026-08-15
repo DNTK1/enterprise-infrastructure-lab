@@ -1,31 +1,28 @@
----
-- name: Install and configure Zabbix Agent 2 clients
+- name: Install and configure Zabbix Agent 2 client
   hosts: zabbix_clients
   become: yes
+  gather_facts: true
 
   vars:
     zabbix_server: "10.10.0.123"
     zabbix_server_active: "10.10.0.123"
-
+    zabbix_agent_hostname: "{{ ansible_facts['hostname'] }}"
     zabbix_repo_url: "https://repo.zabbix.com/zabbix/7.0/rhel/10/x86_64/"
-    zabbix_gpg_key: "https://repo.zabbix.com/zabbix-official-repo.key"
+    zabbix_gpg_key: "https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-B5333005"
 
 
   tasks:
 
-    - name: Check connection
-      ansible.builtin.ping:
-
-    - name: Install required packages
+    - name: Install firewalld
       ansible.builtin.dnf:
         name:
-          - curl
-          - wget
           - firewalld
-          - nc
-          - policycoreutils-python-utils
         state: present
 
+    - name: Import Zabbix GPG key
+      ansible.builtin.rpm_key:
+        key: "{{ zabbix_gpg_key }}"
+        state: present
 
     - name: Add Zabbix repository
       ansible.builtin.yum_repository:
@@ -45,17 +42,8 @@
       ansible.builtin.dnf:
         name:
           - zabbix-agent2
-        state: present
-        disable_gpg_check: yes
-
-    - name: Install Zabbix Agent 2 sender
-      ansible.builtin.dnf:
-        name:
           - zabbix-sender
         state: present
-        disable_gpg_check: yes
-      ignore_errors: yes
-
 
     - name: Configure Zabbix Server
       ansible.builtin.lineinfile:
@@ -64,39 +52,28 @@
         line: "Server={{ zabbix_server }}"
         backup: yes
 
-
     - name: Configure Zabbix Active Server
       ansible.builtin.lineinfile:
         path: /etc/zabbix/zabbix_agent2.conf
         regexp: '^ServerActive='
         line: "ServerActive={{ zabbix_server_active }}"
 
-
-    - name: Get system hostname
-      ansible.builtin.command:
-        cmd: hostname
-      register: system_hostname
-      changed_when: false
-
-
     - name: Configure Zabbix Hostname
       ansible.builtin.lineinfile:
         path: /etc/zabbix/zabbix_agent2.conf
         regexp: '^Hostname='
-        line: "Hostname={{ system_hostname.stdout }}"
+        line: "Hostname={{ zabbix_agent_hostname }}"
         backup: yes
 
-
-    - name: Validate Zabbix Agent configuration
+    - name: Validate Zabbix Agent config
       ansible.builtin.command:
-        cmd: zabbix_agent2 -t agent.hostname
-      register: agent_test
+        cmd: zabbix_agent2 -T
+      register: agent_config_test
       changed_when: false
 
-
-    - name: Show agent hostname test
+    - name: Show configuration test
       ansible.builtin.debug:
-        var: agent_test.stdout
+        var: agent_config_test.stdout_lines
 
     - name: Enable firewalld
       ansible.builtin.systemd:
@@ -104,25 +81,23 @@
         enabled: yes
         state: started
 
-
     - name: Open Zabbix Agent port
       ansible.posix.firewalld:
         port: 10050/tcp
         permanent: yes
-        immediate: yes
         state: enabled
 
-    - name: Enable and restart Zabbix Agent 2
-      ansible.builtin.systemd:
+    - name: Reload firewalld
+      ansible.builtin.systemd_service:
+        name: firewalld
+        state: reloaded
+
+    - name: Enable Zabbix Agent 2
+      ansible.builtin.systemd_service:
         name: zabbix-agent2
         enabled: yes
         state: restarted
-
-    - name: Check Zabbix Agent service status
-      ansible.builtin.systemd:
-        name: zabbix-agent2
       register: zabbix_service
-
 
     - name: Show service state
       ansible.builtin.debug:
@@ -131,34 +106,24 @@
           - "Enabled: {{ zabbix_service.status.UnitFileState }}"
 
     - name: Check listening port 10050
-      ansible.builtin.shell:
-        cmd: ss -tulpn | grep 10050
-      register: port_check
-      changed_when: false
-      failed_when: false
-
-
-    - name: Show port status
-      ansible.builtin.debug:
-        var: port_check.stdout
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 10050
+        timeout: 5
 
     - name: Test connection to Zabbix Server
-      ansible.builtin.shell:
-        cmd: nc -zv {{ zabbix_server }} 10051
-      register: zabbix_server_connection
-      changed_when: false
-      failed_when: false
-
-    - name: Show Zabbix Server connection
-      ansible.builtin.debug:
-        var: zabbix_server_connection.stderr
+      ansible.builtin.wait_for:
+        host: "{{ zabbix_server_active }}"
+        port: 10051
+        connect_timeout: 3
+        timeout: 5
 
     - name: Show final information
       ansible.builtin.debug:
         msg:
           - "===================================="
           - "Zabbix Agent 2 installation finished"
-          - "Hostname: {{ inventory_hostname }}"
+          - "Hostname: {{ zabbix_agent_hostname }}"
           - "Server: {{ zabbix_server }}"
           - "Agent port: 10050"
           - "===================================="
