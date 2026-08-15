@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 # Rocky Linux Cloud Deploy
 
-if (( $# < 6 )); then
+if (( $# != 6 )); then
     echo "Usage:"
     echo "$0 <VMID> <nazwa> <RAM_MB> <vCPU> <dysk_GB> <VLAN>"
 	echo "Example:"
@@ -17,15 +17,27 @@ RAM=${3:-}
 CORES=${4:-}
 DISK=${5:-}
 VLAN=${6:-}
-ROOT_PASSWORD="Ansible"
 
+IFS= read -r -s -p "Hasło root (tylko konsola Proxmox): " \
+ROOT_PASSWORD </dev/tty
+printf '\n' >/dev/tty
+
+IFS= read -r -s -p "Powtórz hasło root: " \
+ROOT_PASSWORD_CONFIRM </dev/tty
+printf '\n' >/dev/tty
+
+if [[ -z "$ROOT_PASSWORD" || "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ]]; then
+    echo "Hasła są puste lub nie są identyczne."
+    exit 1
+fi
+
+unset ROOT_PASSWORD_CONFIRM
 
 # CONFIG
 
-
 CEPH="RBD-POOL"
 
-SMB="/mnt/pve/ProxmoxStorage"
+SMB="/mnt/pve/FileserverSMB"
 
 IMAGE="$SMB/cloud-images/Rocky-10-GenericCloud.qcow2"
 
@@ -41,7 +53,6 @@ CPU="x86-64-v3"
 
 # START
 
-
 if qm status "$VMID" &>/dev/null
 then
 
@@ -50,7 +61,6 @@ then
     exit 1
 
 fi
-
 
 
 if [[ ! -f "$IMAGE" ]]
@@ -62,7 +72,6 @@ then
     exit 1
 
 fi
-
 
 
 if [[ ! -f "$PROXMOX_KEY" ]]
@@ -77,7 +86,6 @@ then
 fi
 
 
-
 if [[ ! -f "$ANSIBLE_KEY" ]]
 then
 
@@ -90,30 +98,23 @@ then
 fi
 
 
-
 echo
 echo "================================="
 echo " Rocky Linux Deployment"
 echo "================================="
 echo
-
 echo "Node:"
 echo "$PROXMOX_NODE"
-
 echo "VMID:"
 echo "$VMID"
-
 echo "Hostname:"
 echo "$HOSTNAME"
-
 echo
-
 
 
 echo "[1/10] Tworzenie VM"
 
 # Chwilowo tak musi zostac - "vlan10" to główa sieć, bez taga vlana - do sfixowania
-
 if [[ "$VLAN" != "10" ]]; then
 qm create "$VMID" \
 --name "$HOSTNAME" \
@@ -135,96 +136,62 @@ qm create "$VMID" \
 fi
 
 
-
 echo "[2/10] Import obrazu"
-
 
 qm importdisk \
 "$VMID" \
 "$IMAGE" \
 "$CEPH"
 
-
-
 echo "[3/10] Dysk"
-
 
 qm set "$VMID" \
 --scsihw virtio-scsi-single \
 --scsi0 "$CEPH:vm-${VMID}-disk-0"
-
-
-
 qm resize "$VMID" scsi0 "${DISK}G"
-
 
 
 echo "[4/10] Cloud-init"
 
-
 qm set "$VMID" \
---ide2 "$CEPH:cloudinit"
-
-
+--ide2 "$CEPH:cloudinit" \
+--ciupgrade 0
 
 
 echo "[5/10] SSH"
 
-
 qm set "$VMID" \
---ciuser rocky
-
-
-
-qm set "$VMID" \
---cipassword "$ROOT_PASSWORD"
-
-
-
-qm set "$VMID" \
+--ciuser rocky \
 --sshkey "$PROXMOX_KEY"
-
 
 
 echo "[6/10] Sieć"
 
-
 qm set "$VMID" \
 --ipconfig0 ip=dhcp
-
-
 
 qm set "$VMID" \
 --nameserver "10.10.0.254 10.10.0.253"
 
 
-
 echo "[7/10] QEMU Agent"
-
 
 qm set "$VMID" \
 --agent enabled=1
-
-
 
 qm set "$VMID" \
 --boot order=scsi0
 
 
-
 echo "[8/10] Start VM"
 
-
 qm start "$VMID"
-
 
 
 echo
 echo "Czekam na DHCP..."
 
-
 IP=""
-
 
 max_attempts=20
 attempt=0
@@ -247,32 +214,29 @@ if [[ -z "$IP" ]]; then
     exit 1
 fi
 
-
-
 echo
 echo "IP:"
 echo "$IP"
 
-
+ssh-keygen \
+-f /root/.ssh/known_hosts \
+-R "$IP" \
+>/dev/null 2>&1 || true
 
 NEWNAME="${HOSTNAME}-${IP}"
-
-
 echo
 echo "Zmiana nazwy VM:"
 echo "$NEWNAME"
 
-
 qm set "$VMID" \
 --name "$NEWNAME"
-
-
 
 echo
 echo "Czekam SSH..."
 
 attempt=0
 until ssh \
+-o BatchMode=yes \
 -o StrictHostKeyChecking=no \
 -o ConnectTimeout=5 \
 rocky@"$IP" hostname
@@ -293,19 +257,17 @@ do
 done
 
 
-
 echo
-echo "Konfiguracja systemu"
-
-
+echo "[9/10] Konfiguracja systemu"
 
 ssh \
+-o BatchMode=yes \
 -o StrictHostKeyChecking=no \
 -o ConnectTimeout=5 \
 rocky@"$IP" \
 "sudo bash -Eeuo pipefail -s" <<EOF
 
-echo 'root:$ROOT_PASSWORD' | chpasswd
+cloud-init status --wait >/dev/null 2>&1 || true
 
 mkdir -p /home/rocky/.ssh
 
@@ -318,42 +280,41 @@ chmod 700 /home/rocky/.ssh
 chmod 600 /home/rocky/.ssh/authorized_keys
 
 mkdir -p /etc/ssh/sshd_config.d
+
 cat > /etc/ssh/sshd_config.d/00-disable-root-login.conf <<CONFIG
 PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
 CONFIG
 
 sshd -t
-systemctl restart sshd
+systemctl reload sshd
 
 EOF
 
+printf 'root:%s\n' "$ROOT_PASSWORD" | ssh \
+-o BatchMode=yes \
+-o StrictHostKeyChecking=no \
+-o ConnectTimeout=5 \
+rocky@"$IP" \
+"sudo chpasswd"
 
+unset ROOT_PASSWORD
 
 
 echo
-echo "================================="
-echo " GOTOWE"
-echo "================================="
-
+echo "[10/10] GOTOWE"
 echo
-
 echo "VMID:"
 echo "$VMID"
-
 echo
-
 echo "Nazwa Proxmox:"
 echo "$NEWNAME"
-
 echo
-
 echo "IP:"
 echo "$IP"
-
 echo
-
 echo "SSH:"
 echo "rocky@$IP"
 echo "rocky@$HOSTNAME"
-
 echo
