@@ -1,11 +1,8 @@
 # Backup
 
-TrueNAS SCALE działa na osobnym komputerze poza klastrem Proxmox. Ma dwa
-dyski 4 TB w mirrorze oraz osobny SSD systemowy.
+TrueNAS SCALE działa na osobnym komputerze poza klastrem Proxmox. Ma dwa dyski 4 TB w mirrorze oraz osobny SSD systemowy.
 
-Proxmox Backup Server działa jako kontener na hoście TrueNAS i jest dodany
-do klastra jako storage `ProxmoxBackup`. TrueNAS udostępnia też zasób
-`ProxmoxStorage` przez SMB dla obrazów cloud, skryptów i kluczy publicznych.
+Proxmox Backup Server działa jako kontener na hoście TrueNAS i jest dodany do klastra jako storage `ProxmoxBackup`. TrueNAS udostępnia też zasób `ProxmoxStorage` przez SMB dla obrazów cloud, skryptów i kluczy publicznych.
 
 ## Polityka wykonywania kopii
 

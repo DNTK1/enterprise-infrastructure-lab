@@ -1,7 +1,6 @@
 # Linux
 
-Serwery Linux działają głównie na Rocky Linux 10. Do ich tworzenia i
-konfiguracji używam prostego skryptu Bash, cloud-init oraz Ansible.
+Serwery Linux działają głównie na Rocky Linux 10. Do ich tworzenia i konfiguracji używam prostego skryptu Bash, cloud-init oraz Ansible.
 
 | Katalog | Co zawiera |
 |---|---|
@@ -11,8 +10,7 @@ konfiguracji używam prostego skryptu Bash, cloud-init oraz Ansible.
 
 ## Tworzenie VM Rocky Linux
 
-Skrypt ustawia RAM, CPU, dysk, sieć, cloud-init, klucze SSH i QEMU Guest
-Agent, a na końcu uruchamia VM.
+Skrypt ustawia RAM, CPU, dysk, sieć, cloud-init, klucze SSH i QEMU Guest Agent, a na końcu uruchamia VM.
 
 ```bash
 ./deploy_rocky.sh <VMID> <nazwa> <RAM_MB> <vCPU> <dysk_GB> <VLAN>
