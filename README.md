@@ -1,12 +1,8 @@
 # Enterprise Infrastructure Lab
 
-To mój domowy lab zbudowany do nauki administracji Windows i Linux,
-wirtualizacji, sieci, automatyzacji oraz CI/CD. Całość działa na klastrze
-Proxmox VE z Ceph, a cięższe maszyny są przełączane pomiędzy profilem Windows
-i profilem CI/CD [`proxmox/profile-switching.md`](proxmox/profile-switching.md).
+To home lab zbudowany do nauki administracji Windows i Linux, wirtualizacji, sieci, automatyzacji oraz CI/CD. Całość działa na klastrze Proxmox VE z Ceph.
 
-Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible,
-skrypty Proxmox oraz testową aplikację SecureHash z pipeline'em Jenkinsa.
+Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skrypty bash oraz testową aplikację z pipelineem Jenkinsa.
 
 ![LabZdjecie](images/LabZdjecie.jpg)
 
@@ -38,7 +34,7 @@ skrypty Proxmox oraz testową aplikację SecureHash z pipeline'em Jenkinsa.
 - pipeline budujący, testujący, skanujący i wdrażający testową aplikację SecureHash
 - Zabbix dla serwerów oraz Prometheus i Grafana dla K3s
 - OPNsense, osobna sieć Ceph i zdalny dostęp przez Tailscale
-- backupy VM do Proxmox Backup Server działającego na hoście TrueNAS
+- backupy VM do Proxmox Backup Server
 - skrypty przełączające zasoby HA pomiędzy profilem `windows` i `cicd`
 
 ## Schemat
@@ -129,7 +125,7 @@ Dokładniejszy opis jest w
 
 ## Aktualnie:
 
-- Przygotowuję się do certyfikatu AZ-900 (Azure cloud) oraz RHCSA (Red Hat Certified System Administrator)
+- Przygotowuję się do certyfikatu AZ-900 (Azure cloud) oraz RHCSA EX200 (Red Hat Certified System Administrator)
 
 ## W przyszłości:
 
