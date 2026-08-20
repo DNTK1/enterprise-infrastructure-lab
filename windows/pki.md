@@ -17,20 +17,15 @@
 | bazowy CRL | 7 dni |
 | delta CRL | 1 dzień |
 
-Root CA podpisuje Issuing CA i na co dzień pozostaje wyłączony. Certyfikat
-Root CA jest rozsyłany przez Active Directory, a autoenrollment GPO obsługuje
-certyfikaty komputerów domenowych. `PKI-WEB01` udostępnia AIA i CRL przez
-HTTP.
+Root CA podpisuje Issuing CA i na co dzień pozostaje wyłączony. Certyfikat Root CA jest rozsyłany przez Active Directory, a autoenrollment GPO obsługuje certyfikaty komputerów domenowych. `PKI-WEB01` udostępnia AIA i CRL przez HTTP.
 
 ## Certyfikaty Proxmox
 
-Każdy node tworzy lokalny klucz i CSR. Issuing CA wystawia certyfikat z nazwą
-DNS noda, a certyfikat i łańcuch są instalowane dla `pveproxy`:
+Każdy node tworzy lokalny klucz i CSR. Issuing CA wystawia certyfikat z nazwą DNS noda, a certyfikat i łańcuch są instalowane dla `pveproxy`:
 
 ```bash
 pvenode cert set node.fullchain.pem node.key.pem -force
 systemctl restart pveproxy
 ```
 
-Root CA jest uruchamiany tylko wtedy, gdy trzeba podpisać CA pośrednią albo
-opublikować nową CRL. Przed większymi zmianami wykonywany jest backup AD CS.
+Root CA jest uruchamiany tylko wtedy, gdy trzeba podpisać CA pośrednią albo opublikować nową CRL. Przed większymi zmianami wykonywany jest backup AD CS.

@@ -22,6 +22,7 @@ Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skryp
 
 ## Co działa w labie
 
+```
 - pięć nodów Proxmox VE, Corosync, HA i migracje maszyn
 - Ceph RBD z pięcioma OSD, replikacją `size=3` i osobną siecią storage
 - dwa kontrolery domeny z AD DS, DNS, DHCP failover, GPO i NPS/RADIUS
@@ -36,6 +37,7 @@ Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skryp
 - OPNsense, osobna sieć Ceph i zdalny dostęp przez Tailscale
 - backupy VM do Proxmox Backup Server
 - skrypty przełączające zasoby HA pomiędzy profilem `windows` i `cicd`
+```
 
 ## Schemat
 
@@ -78,8 +80,7 @@ Opis w
 
 ## Profile Windows i CI/CD
 
-Sprzęt nie pozwala wygodnie uruchamiać wszystkich maszyn naraz. Profile
-wyłączają jeden zestaw VM i włączają drugi:
+Sprzęt nie pozwala wygodnie uruchamiać wszystkich maszyn naraz. Profile wyłączają jeden zestaw VM i włączają drugi:
 
 ```bash
 /mnt/pve/ProxmoxStorage/scripts/profil-windows.sh
@@ -96,14 +97,14 @@ Opis i skrypty znajdują się w
 
 ```text
 commit lub Merge Request
-→ GitLab wysyła webhook do Jenkinsa
-→ quality gate
-→ skany Trivy
-→ budowa i wysłanie obrazów do Registry
-→ wdrożenie brancha main do K3s
-→ rolling update
-→ test aplikacji
-→ rollback przy błędzie
+- GitLab wysyła webhook do Jenkinsa
+- quality gate
+- skany Trivy
+- budowa i wysłanie obrazów do Registry
+- wdrożenie brancha main do K3s
+- rolling update
+- test aplikacji
+- rollback przy błędzie
 ```
 
 [![Watch the video](https://img.youtube.com/vi/6pclmimSptk/hqdefault.jpg)](https://www.youtube.com/embed/6pclmimSptk)
@@ -113,10 +114,8 @@ Dokładniejszy opis jest w
 
 ## Kilka uwag
 
-- `Lab1`–`Lab3` są zagnieżdżone w VMware na jednym komputerze AMD, a `Lab4`
-  i `Lab5` to dwa fizyczne komputery Intel
-- cold migration działa pomiędzy wszystkimi nodami, natomiast live migration
-  Windows z nested AMD do Intel kończy się błędem `MEMORY_MANAGEMENT`
+- `Lab1`–`Lab3` są zagnieżdżone w VMware na jednym komputerze AMD, a `Lab4` i `Lab5` to dwa fizyczne komputery Intel
+- cold migration działa pomiędzy wszystkimi nodami, natomiast live migration Windows z nested AMD do Intel kończy się błędem `MEMORY_MANAGEMENT`
 - dokumentacja była nadrabiana z dużym opóźnieniem z pamięci stąd opisy przede wszystkim architektury Windowsa mogą nie być kompletne
 
 

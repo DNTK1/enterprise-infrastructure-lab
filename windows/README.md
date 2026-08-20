@@ -1,7 +1,6 @@
 # Windows Server
 
-Warstwa Windows odwzorowuje podstawowe usługi katalogowe, sieciowe,
-certyfikatowe i zarządzania urządzeniami.
+Warstwa Windows odwzorowuje podstawowe usługi katalogowe, sieciowe, certyfikatowe i zarządzania urządzeniami.
 
 | Dokument | Zakres |
 |---|---|
@@ -9,7 +8,6 @@ certyfikatowe i zarządzania urządzeniami.
 | [configuration-manager.md](configuration-manager.md) | SQL Server, Configuration Manager i WSUS |
 | [identity-sync.md](identity-sync.md) | Entra Connect Sync i Tailscale |
 | [pki.md](pki.md) | offline Root CA, Issuing CA, AIA/CDP i TLS Proxmox |
-| [powershell/](powershell/) | Skrypty PowerShell |
 
 ## Role
 

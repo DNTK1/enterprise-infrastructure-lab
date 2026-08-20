@@ -23,12 +23,14 @@ Pierwszy, bardziej rozbudowany przykład pipeline'u. Aplikacja składa się z ba
 
 Pipeline wykonuje m.in.:
 
-* testy i lint;
-* budowę obrazów Docker;
-* skanowanie Trivy;
-* publikację obrazów do GitLab Container Registry;
-* deployment do K3s dla brancha `main`;
-* sprawdzenie aplikacji po wdrożeniu.
+```
+- testy i lint;
+- budowę obrazów Docker;
+- skanowanie Trivy;
+- publikację obrazów do GitLab Container Registry;
+- deployment do K3s dla brancha `main`;
+- sprawdzenie aplikacji po wdrożeniu.
+```
 
 Kod i podstawowe informacje: [`securehash/`](securehash/)
 
@@ -38,15 +40,13 @@ Prostsza aplikacja FastAPI przygotowana głównie w celu nauki pełnego procesu 
 
 ```text
 git push
-→ GitLab webhook
-→ Jenkins Multibranch
-→ testy i security scan
-→ Container Registry
-→ K3s
-→ NGINX Ingress
+- GitLab webhook
+- Jenkins Multibranch
+- testy i security scan
+- Container Registry
+- K3s
+- NGINX Ingress
 ```
-
-Branche robocze przechodzą testy i skany, natomiast publikacja obrazu oraz deployment wykonywane są tylko z `main`.
 
 Kod i opis: [`securehash-status/`](securehash-status/)
 
