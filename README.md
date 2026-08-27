@@ -124,9 +124,9 @@ Dokładniejszy opis jest w
 
 ## Aktualnie:
 
-- Przygotowuję się do certyfikatu AZ-900 (Azure cloud) oraz RHCSA EX200 (Red Hat Certified System Administrator)
+- Przygotowuję się do certyfikatu RHCSA EX200 (Red Hat Certified System Administrator)
 
 ## W przyszłości:
 
 - W dalszej przyszłości zamierzam dodać jakiś projekt z użyciem cloud + Terraform
-- Do poprawy VLANy wraz z podziałem sieci na Management, VM, Ceph - wymaga zmiany adresacji wielu maszyn
+- Do poprawy VLANy wraz z docelowym podziałem sieci na Management, VM, Ceph - wymaga zmiany adresacji wielu maszyn
