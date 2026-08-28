@@ -83,9 +83,9 @@ Opis w
 Sprzęt nie pozwala wygodnie uruchamiać wszystkich maszyn naraz. Profile wyłączają jeden zestaw VM i włączają drugi:
 
 ```bash
-/mnt/pve/ProxmoxStorage/scripts/profil-windows.sh
-/mnt/pve/ProxmoxStorage/scripts/profil-cicd.sh
-/mnt/pve/ProxmoxStorage/scripts/profil-status.sh
+/mnt/pve/FileserverSMB/scripts/profil-windows.sh
+/mnt/pve/FileserverSMB/scripts/profil-cicd.sh
+/mnt/pve/FileserverSMB/scripts/profil-status.sh
 ```
 
 [![Watch the video](https://img.youtube.com/vi/Up8BLP5pXxE/hqdefault.jpg)](https://www.youtube.com/embed/Up8BLP5pXxE)
