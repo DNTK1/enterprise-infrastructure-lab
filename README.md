@@ -72,7 +72,7 @@ Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skryp
 
 ## Instalacja Rocky Linux 10 + Zabbix client (Bash+Ansible)
 
-[![Watch the video](https://img.youtube.com/vi/jx5JFHaUXdw/hqdefault.jpg)](https://www.youtube.com/embed/jx5JFHaUXdw)
+[![Watch the video](https://img.youtube.com/vi/Sv48lFKTrDY/hqdefault.jpg)](https://www.youtube.com/embed/Sv48lFKTrDY)
 
 Opis w
 [`linux/README.md`](linux/README.md), oraz
