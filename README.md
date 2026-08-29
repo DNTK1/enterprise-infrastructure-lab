@@ -120,7 +120,7 @@ Dokładniejszy opis jest w
 
 
 
-# 01.08.2026 Co dalej
+# 29.08.2026 Co dalej
 
 ## Aktualnie:
 
@@ -128,5 +128,5 @@ Dokładniejszy opis jest w
 
 ## W przyszłości:
 
-- W dalszej przyszłości zamierzam dodać jakiś projekt z użyciem cloud + Terraform
-- Do poprawy VLANy wraz z docelowym podziałem sieci na Management, VM, Ceph - wymaga zmiany adresacji wielu maszyn
+- Do poprawy VLANy wraz z docelowym podziałem sieci na Management, VM i Ceph - wymaga zmiany adresacji wielu maszyn
+- W dalszej przyszłości planuję dodać projekt w architekturze hybrydowej Azure + on-prem, np. skracacz linków z frontendem i publiczną bramą w Azure oraz backendem z PostgreSQL działającym na K3s/K8s i korzystającym z Ceph CSI. Połączenie między chmurą a labem będzie realizowane przez Tailscale, a infrastruktura Azure zarządzana za pomocą Terraforma
