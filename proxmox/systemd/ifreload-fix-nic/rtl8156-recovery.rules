@@ -1,2 +1,2 @@
-ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0bda", ATTR{idProduct}=="8156", TEST=="power/control", ATTR{power/control}="on"
-ACTION=="add", SUBSYSTEM=="net", KERNEL=="enx*", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="8156", TAG+="systemd", ENV{SYSTEMD_WANTS}+="ifreload-fix-nic.service"
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0bda", ATTR{idProduct}=="8156", TEST=="power/control", ATTR{power/control}="on", RUN+="/usr/bin/systemctl --no-block start ifreload-fix-nic.service"
+ACTION=="add", SUBSYSTEM=="net", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="8156", RUN+="/usr/bin/systemctl --no-block start ifreload-fix-nic.service"
