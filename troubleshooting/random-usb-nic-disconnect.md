@@ -10,8 +10,8 @@ Ręcznie zaktualizowany sterownik Realteka.
 
 # Automatyczny ifreload (systemd)
 
-Dodatkowo dodany automatyczny fix przez ifreload -a opisany w [Rozłączanie kart sieciowych USB](/proxmox/systemd/ifreload-fix-nic/random-usb-nic-disconnect.md)
+Dodatkowo dodany automatyczny fix przez ifreload -a opisany w [Rozłączanie kart sieciowych USB](../proxmox/systemd/ifreload-fix-nic/random-usb-nic-disconnect.md)
 
 # Fixed?
 
-Do sprawdzenia czy problem będzie wracał, później można odczytać journalctl czy fix był użyty automatycznie, czy same zmiany poprzedni zmiany pomogły.
+Do sprawdzenia czy problem będzie wracał, później można odczytać journalctl czy fix był użyty automatycznie, czy wystarczyły poprzednie zmiany.
