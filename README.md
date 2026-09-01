@@ -6,19 +6,9 @@ Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skryp
 
 ![LabZdjecie](images/LabZdjecie.jpg)
 
-# Sprzęt
+## Schemat
 
-| Ilość | Urządzenie | Procesor | RAM | Dyski | Sieć | Zastosowanie |
-|---:|---|---|---:|---|---|---|
-| 1 | Główny komputer AMD | AMD Ryzen 7 9800X3D | 64 GB | 3 × NVMe SSD; każdy z nodów `Lab1`–`Lab3` ma 200 GiB na system i 460 GiB na OSD Ceph | 10 GbE dla Ceph, 3 x 2.5 GbE dla LAN, 2.5 GbE dla zarządzania | VMware Workstation i trzy zagnieżdżone nody Proxmox: `Lab1`, `Lab2`, `Lab3` |
-| 1 | Fujitsu P957 — `Lab4` | Intel Core i5-7600 | 16 GB | NVMe SSD 128 GB na Proxmox, SSD 500 GB na Ceph | 2.5 GbE dla Ceph, 2.5 GbE dla LAN, 1 GbE dla zarządzania | Fizyczny node Proxmox |
-| 1 | Fujitsu P957 — `Lab5` | Intel Core i5-7600 | 16 GB | NVMe SSD 128 GB na Proxmox, SSD 500 GB na Ceph | 2.5 GbE dla Ceph, 2.5 GbE dla LAN, 1 GbE dla zarządzania | Fizyczny node Proxmox |
-| 1 | HP EliteDesk 800 G3 — `LabFirewall` | Intel Core i5-6500 | 16 GB | SSD 256 GB, 2 TB HDD, 500 GB HDD | 2 x 10 GbE LAN, 2.5 GbE WAN, 1 GbE dla zarządzania | Proxmox z OPNsense, Proxmox Backup Server i zasobem SMB |
-| 1 | Komputer TrueNAS | Intel Core i5-2500K | 16 GB | SSD 256 GB na system, 2 × HDD 4 TB w mirrorze | 2.5 GbE | TrueNAS SCALE, zapasowy zasób SMB i kontener Proxmox Backup Server w innej podsieci |
-| 2 | HORACO HC-SWTGW218AS | — | — | — | 10 GbE, 8 x 2.5 GbE | Jeden switch dla Ceph z MTU 9000, drugi dla głównej sieci VM |
-| 1 | HORACO ZX310S-8T2XS | — | — | — | 2 x 10 GbE, 8 x 2.5 GbE | Switch do sieci management |
-| 1 | Router ASUS AX3600 | — | — | — | 1 GbE i Wi-Fi | Dostęp bezprzewodowy do sieci laboratoryjnej i logowanie przez RADIUS/NPS |
-| 1 | Router FunBox | — | — | — | — | Łącze z Internetem i osobna podsieć, do której jest podłączony host TrueNAS |
+![enterprise-lab-overview](images/enterprise-lab-overview.png)
 
 ## Co działa w labie
 
@@ -39,9 +29,19 @@ Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skryp
 - skrypty przełączające zasoby HA pomiędzy profilem `windows` i `cicd`
 ```
 
-## Schemat
+# Sprzęt
 
-![enterprise-lab-overview](images/enterprise-lab-overview.png)
+| Ilość | Urządzenie | Procesor | RAM | Dyski | Sieć | Zastosowanie |
+|---:|---|---|---:|---|---|---|
+| 1 | Główny komputer AMD | AMD Ryzen 7 9800X3D | 64 GB | 3 × NVMe SSD; każdy z nodów `Lab1`–`Lab3` ma 200 GiB na system i 460 GiB na OSD Ceph | 10 GbE dla Ceph, 3 x 2.5 GbE dla LAN, 2.5 GbE dla zarządzania | VMware Workstation i trzy zagnieżdżone nody Proxmox: `Lab1`, `Lab2`, `Lab3` |
+| 1 | Fujitsu P957 — `Lab4` | Intel Core i5-7600 | 16 GB | NVMe SSD 128 GB na Proxmox, SSD 500 GB na Ceph | 2.5 GbE dla Ceph, 2.5 GbE dla LAN, 1 GbE dla zarządzania | Fizyczny node Proxmox |
+| 1 | Fujitsu P957 — `Lab5` | Intel Core i5-7600 | 16 GB | NVMe SSD 128 GB na Proxmox, SSD 500 GB na Ceph | 2.5 GbE dla Ceph, 2.5 GbE dla LAN, 1 GbE dla zarządzania | Fizyczny node Proxmox |
+| 1 | HP EliteDesk 800 G3 — `LabFirewall` | Intel Core i5-6500 | 16 GB | SSD 256 GB, 2 TB HDD, 500 GB HDD | 2 x 10 GbE LAN, 2.5 GbE WAN, 1 GbE dla zarządzania | Proxmox z OPNsense, Proxmox Backup Server i zasobem SMB |
+| 1 | Komputer TrueNAS | Intel Core i5-2500K | 16 GB | SSD 256 GB na system, 2 × HDD 4 TB w mirrorze | 2.5 GbE | TrueNAS SCALE, zapasowy zasób SMB i kontener Proxmox Backup Server w innej podsieci |
+| 2 | HORACO HC-SWTGW218AS | — | — | — | 10 GbE, 8 x 2.5 GbE | Jeden switch dla Ceph z MTU 9000, drugi dla głównej sieci VM |
+| 1 | HORACO ZX310S-8T2XS | — | — | — | 2 x 10 GbE, 8 x 2.5 GbE | Switch do sieci management |
+| 1 | Router ASUS AX3600 | — | — | — | 1 GbE i Wi-Fi | Dostęp bezprzewodowy do sieci laboratoryjnej i logowanie przez RADIUS/NPS |
+| 1 | Router FunBox | — | — | — | — | Łącze z Internetem i osobna podsieć, do której jest podłączony host TrueNAS |
 
 ## Technologie uzyte w projekcie
 
