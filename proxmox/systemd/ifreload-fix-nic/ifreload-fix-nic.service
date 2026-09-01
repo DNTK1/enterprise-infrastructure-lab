@@ -1,0 +1,8 @@
+[Unit]
+Description=Fix dla USB NIC (ifreload po reconnect)
+After=networking.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/sleep 4
+ExecStart=/usr/sbin/ifreload -a

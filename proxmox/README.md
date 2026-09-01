@@ -10,5 +10,6 @@ Główny klaster składa się z pięciu nodów Proxmox VE. Trzy działają jako 
 | [profile-switching.md](profile-switching.md) | uruchamianie profilu Windows lub CI/CD |
 | [nested-virtualization.md](nested-virtualization.md) | Proxmox uruchomiony wewnątrz VMware |
 | [scripts/profiles/](scripts/profiles/) | skrypty profili i statusu |
+| [systemd/](systemd/) | Dodane usługi systemd |
 
 W klastrze działa Corosync, Ceph RBD, HA i migracja maszyn. Każdy node ma jeden MON i jeden OSD, a ruch Ceph korzysta z osobnej sieci z MTU 9000.
