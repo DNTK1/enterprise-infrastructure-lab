@@ -20,11 +20,11 @@ Prawdopodobnie jedyny fix to zmiana infrastruktury, na ten moment trzeba używa�
 
 Problem prawdopodobnie jest między VMWare Workstation a Windowsem, wypuszcza ruch dalej na otagowanym vlanie, ale filtruje ruch powrotny.
 
-Możliwy fix to przekazanie osobnej karty sieciowej USB dla zagnieżdzonego Proxmoxa, żeby pominąć komunikacje Windows - bridge VMware.
+Możliwy fix to przekazanie osobnej karty sieciowej USB dla zagnieżdzonego Proxmoxa, żeby pominąć komunikację Windows - bridge VMware.
 
 # FIXED
 
-Problem rozwiązało dodanie dodatkowych karty sieciowych USB dla każdego noda, następnie przekazanie ich bezpośrednio w VMware dla Proxmoxa.
+Problem rozwiązało dodanie dodatkowych kart sieciowych USB dla każdego noda, następnie przekazanie ich bezpośrednio w VMware dla Proxmoxa.
 
 # Dodanie osobnych kart sieciowych do VMWare Workstation
 
@@ -48,4 +48,4 @@ lsusb | grep 0bda:8156
 ip -br link | grep enx
 ```
 
-Następnie trzeba dodać nowy bridge w Proxmoxie i nazwa bridge ports będzie w poprzedniej komendy np. enx18694503a656
+Następnie trzeba dodać nowy bridge w Proxmoxie i nazwa bridge ports będzie z poprzedniej komendy np. enx18694503a656

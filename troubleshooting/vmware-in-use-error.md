@@ -1,7 +1,7 @@
 # VMWare VM in use error
 
 Po niepoprawnym wyłączeniu maszyn Proxmox w VMWare Workstation stara sesja wyświetla się nadal jako aktywna.
-![VMWareInUseErr](/images/vmwareinuseerr.png)
+![VMWareInUseErr](../images/vmwareinuseerr.png)
 
 # FIX
 

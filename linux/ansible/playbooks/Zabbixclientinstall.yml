@@ -1,6 +1,6 @@
 - name: Install and configure Zabbix Agent 2 client
   hosts: zabbix_clients
-  become: yes
+  become: true
   gather_facts: true
 
   vars:

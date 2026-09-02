@@ -1,5 +1,6 @@
 - name: Instalacja toolsow
   hosts: all
+  become: true
 
   tasks:
     - name: Install tools

@@ -1,6 +1,6 @@
 # Losowe rozłączanie się kart sieciowych USB
 
-Karty sieciowe usb co jakiś czas rozłaczają się i łącza ponownie, ponowne automatyczne połączenie z vmware działa, natomiast co jakiś czas Proxmox nie wyłapuje i przestaje działać sieć VM, `ifreload -a` chwilowo rozwiązuje problem.
+Karty sieciowe USB co jakiś czas rozłączają się i łączą ponownie, ponowne automatyczne połączenie z VMware działa, natomiast co jakiś czas Proxmox nie wyłapuje i przestaje działać sieć VM, `ifreload -a` chwilowo rozwiązuje problem.
 
 # Próby fix
 

@@ -1,6 +1,6 @@
 # Monitoring K3s
 
-Klaster K3s jest monitorowany przez `kube-prometheus-stack` zainstalowanyprzez Helm.
+Klaster K3s jest monitorowany przez `kube-prometheus-stack` zainstalowany przez Helm.
 
 W skład zestawu wchodzą:
 

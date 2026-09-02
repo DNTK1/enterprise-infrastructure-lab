@@ -1,4 +1,4 @@
-- name: Instalacja Docker Engine na build01
+- name: Instalacja Docker Engine na gitlab01
   hosts: gitlab
   become: true
 

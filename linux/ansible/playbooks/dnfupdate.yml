@@ -1,5 +1,6 @@
 - name: Aktualizacja Rocky Linux przez dnf
   hosts: all
+  become: true
   
 
   tasks:

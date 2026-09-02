@@ -2,7 +2,7 @@
 
 Rozszerzanie dysku C jest problematyczne przez partycję Recovery, żeby rozszerzyć partycję Unallocated pamięć musi znajdować się obok niej.
 
-![PartycjaRecovery](/images/PartycjaRecovery.png)
+![PartycjaRecovery](../images/PartycjaRecovery.png)
 
 # FIX
 
@@ -23,14 +23,14 @@ delete partition override
 
 W tym momencie należy przejść do Disk managementu w Windowsie i rozszerzyć partycję C.
 
-![ExtendVolumeC](/images/ExtendVolumeC.png)
+![ExtendVolumeC](../images/ExtendVolumeC.png)
 
 Następnie w tym samym miejscu Shrink Volume o 1gb i trzeba utworzyć osobną partycję bez ustawiania jej litery, posłuży ona do odbudowy Recovery.
 
 Po tym powrót do diskpart.
 
 ```
-list parition
+list partition
 select partition 4 (do wskazania nowo utworzona partycja 1gb)
 set id=<wpisz_Type>
 gpt attributes=<wpisz_Attrib>

@@ -1,8 +1,9 @@
-- name: Otwieranie portow na firewallu
+- name: Zamykanie portow na firewallu
   hosts: all
+  become: true
 
   tasks:
-    - name: Open portow na firewallu (service)
+    - name: Close portow na firewallu (service)
       ansible.posix.firewalld:
         service: "{{ item }}"
         permanent: true
@@ -12,7 +13,7 @@
         - http
         - https
 
-    - name: Open portow na firewallu (port)
+    - name: Close portow na firewallu (port)
       ansible.posix.firewalld:
         port: "{{ item }}"
         permanent: true

@@ -1,5 +1,6 @@
 - name: Otwieranie portow na firewallu
   hosts: all
+  become: true
 
   tasks:
     - name: Open portow na firewallu (service)

@@ -14,7 +14,7 @@ Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skryp
 
 ```
 - pięć nodów Proxmox VE, Corosync, HA i migracje maszyn
-- Ceph RBD z pięcioma OSD, replikacją `size=3` i osobną siecią storage
+- Ceph RBD z pięcioma OSD, replikacją `size=3` i osobną siecią
 - dwa kontrolery domeny z AD DS, DNS, DHCP failover, GPO i NPS/RADIUS
 - SQL Server, Microsoft Configuration Manager, WSUS i Entra Connect Sync
 - Root CA offline, Issuing CA oraz serwer Nginx publikujący AIA i CRL
@@ -24,7 +24,7 @@ Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skryp
 - trzywęzłowy K3s z embedded etcd, kube-vip, MetalLB i NGINX Ingress
 - pipeline budujący, testujący, skanujący i wdrażający testową aplikację SecureHash
 - Zabbix dla serwerów oraz Prometheus i Grafana dla K3s
-- OPNsense, osobna sieć Ceph i zdalny dostęp przez Tailscale
+- OPNsense, VLANy, osobna sieć Ceph i zdalny dostęp przez Tailscale
 - backupy VM do Proxmox Backup Server
 - skrypty przełączające zasoby HA pomiędzy profilem `windows` i `cicd`
 ```
@@ -43,7 +43,7 @@ Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skryp
 | 1 | Router ASUS AX3600 | — | — | — | 1 GbE i Wi-Fi | Dostęp bezprzewodowy do sieci laboratoryjnej i logowanie przez RADIUS/NPS |
 | 1 | Router FunBox | — | — | — | — | Łącze z Internetem i osobna podsieć, do której jest podłączony host TrueNAS |
 
-## Technologie uzyte w projekcie
+## Technologie użyte w projekcie
 
 | Obszar | Technologie |
 |---|---|
@@ -75,7 +75,7 @@ Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skryp
 [![Watch the video](https://img.youtube.com/vi/Sv48lFKTrDY/hqdefault.jpg)](https://www.youtube.com/embed/Sv48lFKTrDY)
 
 Opis w
-[`linux/README.md`](linux/README.md), oraz
+[`linux/README.md`](linux/README.md) oraz
 [`linux/ansible/README.md`](linux/ansible/README.md)
 
 ## Profile Windows i CI/CD
@@ -116,7 +116,7 @@ Dokładniejszy opis jest w
 
 - `Lab1`–`Lab3` są zagnieżdżone w VMware na jednym komputerze AMD, a `Lab4` i `Lab5` to dwa fizyczne komputery Intel
 - cold migration działa pomiędzy wszystkimi nodami, natomiast live migration Windows z nested AMD do Intel kończy się błędem `MEMORY_MANAGEMENT`
-- dokumentacja była nadrabiana z dużym opóźnieniem z pamięci stąd opisy przede wszystkim architektury Windowsa mogą nie być kompletne
+- dokumentacja była uzupełniana z opóźnieniem i częściowo z pamięci, dlatego opisy przede wszystkim architektury Windowsa mogą nie być kompletne
 
 
 
