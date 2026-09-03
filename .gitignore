@@ -13,9 +13,7 @@ vault-password*
 *.password
 *.token
 
-# Ansible
 *.retry
-inventory.ini
 
 # Build and test output
 node_modules/
