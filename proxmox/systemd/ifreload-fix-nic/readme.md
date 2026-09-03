@@ -5,6 +5,11 @@
 /etc/udev/rules.d/rtl8156-recovery.rules
 ```
 
+```
+systemctl daemon-reload
+udevadm control --reload-rules
+```
+
 # Test
 
 Odłączona i podłączona karta sieciowa, poprawnie aktywował się fix i sieć wstała.
