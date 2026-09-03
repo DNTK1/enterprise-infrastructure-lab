@@ -1,6 +1,7 @@
 # Secrets and local environment
 .env
 .env.*
+.venv/
 !.env.example
 *.key
 *.pem
@@ -26,6 +27,7 @@ htmlcov/
 .ruff_cache/
 __pycache__/
 *.py[cod]
+*.pyc
 
 # Local files and backups
 /linux/deploy-rocky.conf

@@ -2,7 +2,7 @@
 
 To home lab zbudowany do nauki administracji Windows i Linux, wirtualizacji, sieci, automatyzacji oraz CI/CD. Całość działa na klastrze Proxmox VE z Ceph.
 
-Repozytorium zawiera krótki opis środowiska, używane playbooki Ansible, skrypty bash oraz testową aplikację z pipelineem Jenkinsa.
+Repozytorium zawiera opis środowiska, używane playbooki Ansible, skrypty bash oraz testową aplikację z pipelineem Jenkinsa.
 
 ![LabZdjecie](images/LabZdjecie.jpg)
 
