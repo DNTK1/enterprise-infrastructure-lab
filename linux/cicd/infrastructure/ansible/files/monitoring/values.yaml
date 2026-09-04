@@ -4,15 +4,11 @@ crds:
 defaultRules:
   create: true
   rules:
-    # K3s uruchamia wiele komponentów control plane w jednym procesie.
-    # Osobne monitory tych komponentów dodamy później w sposób zgodny z K3s.
     etcd: false
     kubeControllerManager: false
     kubeSchedulerAlerting: false
     kubeSchedulerRecording: false
 
-# Te standardowe monitory oczekują osobnych procesów i endpointów,
-# których K3s domyślnie nie wystawia tak jak pełny Kubernetes.
 kubeControllerManager:
   enabled: false
 
@@ -79,8 +75,6 @@ prometheus:
             requests:
               storage: 20Gi
 
-    # Własne ServiceMonitory muszą mieć etykietę:
-    # release: monitoring
     serviceMonitorSelectorNilUsesHelmValues: true
     serviceMonitorNamespaceSelector: {}
 
