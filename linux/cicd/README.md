@@ -50,6 +50,11 @@ git push
 
 Kod i opis: [`securehash-status/`](securehash-status/)
 
+### URL-Shortener
+
+Aplikacja do skracania URL z pipelinem w GitHub Actions.
+[URL-Shortener](https://github.com/DNTK1/url-shortener)
+
 ## Infrastruktura
 
 Konfiguracja platformy CI/CD i klastra znajduje się w:
