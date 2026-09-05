@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 mkdir -p reports
 
-COMMON_ARGS=(--ignore-unfixed --severity HIGH,CRITICAL)
+COMMON_ARGS=(--exit-code 1 --ignore-unfixed --severity HIGH,CRITICAL)
 
 echo "[1/3] Kod, zaleznosci, sekrety i konfiguracja"
 trivy fs \

@@ -3,13 +3,10 @@
   become: true
 
   vars:
-    # Wpisz prawdziwą nazwę. Najlepiej wszędzie używać małych liter.
     registry_fqdn: "registry.DOMENA.LAB"
 
-    # Plik znajduje się na RockyGUIAnsible, czyli kontrolerze Ansible.
     ca_source: "/home/roo/pki/gitlab/lab-root-ca.crt"
 
-    # Docker użyje katalogu zapisanego małymi literami.
     registry_fqdn_lower: "{{ registry_fqdn | lower }}"
     docker_registry_ca_dir: "/etc/docker/certs.d/{{ registry_fqdn_lower }}"
 

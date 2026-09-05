@@ -23,14 +23,14 @@ Branche robocze przechodzą testy i skany bezpieczeństwa. Publikacja obrazu ora
 Pipeline wykonuje:
 
 ```
-- lint kodu przy pomocy `ruff`;
-- testy `pytest`;
-- skan zależności przez `pip-audit`;
-- analizę kodu przez `bandit`;
-- budowę obrazu Docker;
-- publikację obrazu do prywatnego GitLab Container Registry;
-- deployment aplikacji do K3s;
-- sprawdzenie poprawnego rollout'u.
+- lint kodu przy pomocy `ruff`
+- testy `pytest`
+- skan zależności przez `pip-audit`
+- analizę kodu przez `bandit`
+- budowę obrazu Docker
+- publikację obrazu do prywatnego GitLab Container Registry
+- deployment aplikacji do K3s
+- sprawdzenie poprawnego rollout'u
 ```
 
 Obrazy są tagowane skróconym SHA commita, dzięki czemu można łatwo sprawdzić, jaka wersja aplikacji działa w klastrze.

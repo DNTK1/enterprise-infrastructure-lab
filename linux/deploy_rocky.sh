@@ -114,7 +114,6 @@ echo
 
 echo "[1/10] Tworzenie VM"
 
-# Chwilowo tak musi zostac - "vlan10" to główna sieć, bez taga vlana - do sfixowania
 if [[ "$VLAN" != "10" ]]; then
 qm create "$VMID" \
 --name "$HOSTNAME" \
