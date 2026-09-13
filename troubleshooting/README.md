@@ -8,4 +8,5 @@
 | [Rozszerzanie partycji systemowej Windows](rozszerzanie-partycji-systemowej-win.md) | FIXED |
 | [VMWare VM in use error](vmware-in-use-error.md) | FIXED |
 | [TPM error Ceph](tpm-error-ceph.md) | FIXED |
-| [Rozłączanie kart sieciowych USB](random-usb-nic-disconnect.md) | FIXED? |
+| [Rozłączanie kart sieciowych USB](random-usb-nic-disconnect.md) | FIXED |
+| [PBS – konflikt IP z API Kubernetes](pbs-ip-conflict.md) | FIXED |
