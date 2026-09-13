@@ -21,8 +21,8 @@ osobnych serwerów.
 | Storage | Zastosowanie |
 |---|---|
 | `RBD-POOL` | dyski VM na Ceph RBD |
-| `ProxmoxStorage` | zasób SMB z obrazami cloud, skryptami i kluczami |
-| `ProxmoxBackup` | backupy w Proxmox Backup Server |
+| `FileserverSMB` | zasób SMB z obrazami cloud, skryptami i kluczami |
+| `PBS` | backupy w Proxmox Backup Server |
 
 ## Sieć Ceph
 

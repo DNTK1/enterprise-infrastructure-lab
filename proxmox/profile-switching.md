@@ -36,13 +36,13 @@ done
 
 ```bash
 # pokaż stan
-/mnt/pve/ProxmoxStorage/scripts/profil-status.sh
+/mnt/pve/FileserverSMB/scripts/profil-status.sh
 
 # włącz Windows
-/mnt/pve/ProxmoxStorage/scripts/profil-windows.sh
+/mnt/pve/FileserverSMB/scripts/profil-windows.sh
 
 # włącz CI/CD
-/mnt/pve/ProxmoxStorage/scripts/profil-cicd.sh
+/mnt/pve/FileserverSMB/scripts/profil-cicd.sh
 ```
 
 Profil Windows najpierw wyłącza VM CI/CD, czeka na ich zatrzymanie, a później
