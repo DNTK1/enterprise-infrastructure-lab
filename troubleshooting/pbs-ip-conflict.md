@@ -4,7 +4,7 @@
 
 PBS tracił pakiety do OPNsense i pozostałych maszyn w LAN-ie.
 Pierwsze 2 pakiety przechodziły poprawnie, następne 20–30 było traconych,
-po czym ponownie przechodziły 2 pakiety. Cykl powtarzał się przez cały test.
+po czym ponownie przechodziły 2-3 pakiety. Cykl powtarzał się przez cały test.
 
 
 ![PBS – utrata pakietów przed zmianą IP](../images/PBSpingproblem.png)
