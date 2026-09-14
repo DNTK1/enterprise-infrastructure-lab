@@ -17,21 +17,24 @@ klastrem. DNS i DHCP działają na kontrolerach domeny Windows.
 
 ## VLAN
 
-Problem z VLAN-ami opisany w [troubleshooting/vlan-nested-virtualization.md](../troubleshooting/vlan-nested-virtualization.md).
-VLAN-y są już dodane i działają poprawnie, natomiast przez ten problem cała sieć od początku była tworzona na głównym nieotagowanym lanie (10).
-W przyszłości do poprawy, na ten moment tak zostaje, ponieważ zmiana adresacji nie jest tak prosta i może spowodować dużo różnych losowych problemów.
+Przez wcześniejszy [problem z VLAN-ami w nested virtualization](../troubleshooting/vlan-nested-virtualization.md)
+większość laba powstała w nieotagowanym LAN-ie `10.10.0.0/24`.
+Problem jest rozwiązany i zacząłem migrować maszyny do nowego podziału sieci.
+Kontrolery domeny są już w VLAN20, a pozostałe maszyny są przenoszone etapami.
 
-| VLAN | Nazwa zakresu DHCP | Podsieć | Pula DHCP |
-|---:|---|---|---|
-| 10 | `DefaultVLAN10` | `10.10.0.0/24` | `10.10.0.120–220` |
-| 20 | `ServersVLAN20` | `10.20.0.0/24` | `10.20.0.100–200` |
-| 30 | `ClientsVLAN30` | `10.30.0.0/24` | `10.30.0.100–250` |
-| 40 | `WIFIVLAN40` | `10.40.0.0/24` | `10.40.0.100–250` |
-| 50 | `VPNVLAN50` | `10.50.0.0/24` | `10.50.0.100–250` |
+| LAN / VLAN | Nazwa | Podsieć | Docelowe zastosowanie |
+|---|---|---|---|
+| 10 | MGMT | `10.10.0.0/24` | (untagged) hosty Proxmox, zarządzanie switchami, komputer admina |
+| 20 | IDENTITY | `10.20.0.0/24` | kontrolery domeny, `CloudSyncWinGUI`, `PKI-ISS01` |
+| 30 | SERVERS | `10.30.0.0/24` | pozostałe serwery, monitoring i istniejące środowisko CI/CD oraz K3s |
+| 40 | BACKUP | `10.40.0.0/24` | Proxmox Backup Server |
+| 50 | VPN | `10.50.0.0/24` | maszyny zapewniające dostęp przez VPN |
+| 60 | CLIENTS | `10.60.0.0/24` | klienci testowi i Wi-Fi |
+| 90 | HYBRIDAPP | `10.90.0.0/24` | nowe środowisko aplikacji hybrydowej |
 
-VLAN 10 jest siecią native/untagged na moście `vmbr0`. Pozostałe sieci są
-przenoszone jako tagowane VLAN-y. Routing między nimi, NAT oraz reguły dostępu
-realizuje OPNsense.
+LAN pozostaje nieotagowany, z bramą `10.10.0.1`. Nie zmieniam adresów hostów
+Proxmox ani sieci Ceph. Pozostałe sieci używają tagów VLAN, a routing, NAT
+i reguły dostępu realizuje OPNsense. Brama w każdej z tych podsieci ma adres `.1`.
 
 ## Sieć Ceph
 
