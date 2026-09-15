@@ -18,11 +18,11 @@ CORES=${4:-}
 DISK=${5:-}
 VLAN=${6:-}
 
-IFS= read -r -s -p "Hasło root (tylko konsola Proxmox): " \
+IFS= read -r -s -p "Hasło: " \
 ROOT_PASSWORD </dev/tty
 printf '\n' >/dev/tty
 
-IFS= read -r -s -p "Powtórz hasło root: " \
+IFS= read -r -s -p "Powtórz hasło: " \
 ROOT_PASSWORD_CONFIRM </dev/tty
 printf '\n' >/dev/tty
 
@@ -170,7 +170,7 @@ qm set "$VMID" \
 --ipconfig0 ip=dhcp
 
 qm set "$VMID" \
---nameserver "10.10.0.254 10.10.0.253"
+--nameserver "10.20.0.10 10.20.0.11"
 
 
 echo "[7/10] QEMU Agent"
