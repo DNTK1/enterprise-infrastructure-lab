@@ -67,7 +67,6 @@ Repozytorium zawiera opis środowiska, używane playbooki Ansible, skrypty bash 
 | [`linux/`](linux/) | Rocky Linux, Ansible, platforma CI/CD |
 | [`monitoring/`](monitoring/) | Zabbix oraz monitoring K3s |
 | [`networking/`](networking/) | OPNsense, sieć Ceph i Tailscale |
-| [`backup/`](backup/) | TrueNAS, PBS i polityka wykonywania kopii |
 | [`troubleshooting/`](troubleshooting/) | problemy napotkane podczas budowy laba |
 
 ## Instalacja Rocky Linux 10 + Zabbix client (Bash+Ansible)
@@ -91,7 +90,7 @@ Sprzęt nie pozwala wygodnie uruchamiać wszystkich maszyn naraz. Profile wyłą
 [![Watch the video](https://img.youtube.com/vi/Up8BLP5pXxE/hqdefault.jpg)](https://www.youtube.com/embed/Up8BLP5pXxE)
 
 Opis i skrypty znajdują się w
-[`proxmox/profile-switching.md`](proxmox/profile-switching.md).
+[`proxmox/scripts/profiles/README.md`](proxmox/profile-switching.md).
 
 ## Pipeline aplikacji SecureHash
 
