@@ -3,24 +3,10 @@
 set -e
 
 # VM zarzadzane przez HA
-ALWAYS=(100 101 104 106 150)
-WINDOWS=(102 107 109 103)
+ALWAYS=(100 101 104 106 150 107)
+WINDOWS=(102 109 103)
 CICD=(133 134 135 130 132 105 131)
-
-sprawdz_zasoby_ha() {
-    config=$(ha-manager config)
-    brakujace=()
-
-    for vmid in "${ALWAYS[@]}" "${WINDOWS[@]}" "${CICD[@]}"; do
-        grep -q "^vm:$vmid$" <<< "$config" || brakujace+=("$vmid")
-    done
-
-    if ((${#brakujace[@]})); then
-        echo "Blad: tych VM nie dodano do HA: ${brakujace[*]}"
-        echo "Najpierw dodaj je w Datacenter -> HA -> Resources."
-        exit 1
-    fi
-}
+HYBRIDAPP=(105)
 
 ustaw_stan() {
     stan=$1
@@ -59,8 +45,6 @@ pokaz_status() {
 
 case "$1" in
     windows)
-        sprawdz_zasoby_ha
-
         echo "Wylaczam profil CI/CD..."
         ustaw_stan stopped "${CICD[@]}"
         czekaj_na_wylaczenie "${CICD[@]}"
@@ -71,8 +55,6 @@ case "$1" in
         ;;
 
     cicd)
-        sprawdz_zasoby_ha
-
         echo "Wylaczam profil Windows..."
         ustaw_stan stopped "${WINDOWS[@]}"
         czekaj_na_wylaczenie "${WINDOWS[@]}"
