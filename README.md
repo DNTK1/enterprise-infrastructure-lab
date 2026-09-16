@@ -90,7 +90,7 @@ Sprzęt nie pozwala wygodnie uruchamiać wszystkich maszyn naraz. Profile wyłą
 [![Watch the video](https://img.youtube.com/vi/Up8BLP5pXxE/hqdefault.jpg)](https://www.youtube.com/embed/Up8BLP5pXxE)
 
 Opis i skrypty znajdują się w
-[`proxmox/scripts/profiles/README.md`](proxmox/profile-switching.md).
+[`proxmox/scripts/profiles/README.md`](proxmox/scripts/profiles/README.md).
 
 ## Pipeline aplikacji SecureHash
 
