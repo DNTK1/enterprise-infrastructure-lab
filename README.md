@@ -74,8 +74,8 @@ Repozytorium zawiera opis środowiska, używane playbooki Ansible, skrypty bash 
 [![Watch the video](https://img.youtube.com/vi/Sv48lFKTrDY/hqdefault.jpg)](https://www.youtube.com/embed/Sv48lFKTrDY)
 
 Opis w
-[`linux/README.md`](linux/README.md) oraz
-[`linux/ansible/README.md`](linux/ansible/README.md)
+[`linux/`](linux/) oraz
+[`linux/ansible`](linux/ansible)
 
 ## Profile Windows i CI/CD
 
@@ -90,7 +90,7 @@ Sprzęt nie pozwala wygodnie uruchamiać wszystkich maszyn naraz. Profile wyłą
 [![Watch the video](https://img.youtube.com/vi/Up8BLP5pXxE/hqdefault.jpg)](https://www.youtube.com/embed/Up8BLP5pXxE)
 
 Opis i skrypty znajdują się w
-[`proxmox/scripts/profiles/README.md`](proxmox/scripts/profiles/README.md).
+[`proxmox/scripts/profiles`](proxmox/scripts/profiles).
 
 ## Pipeline aplikacji SecureHash
 
@@ -109,7 +109,7 @@ commit lub Merge Request
 [![Watch the video](https://img.youtube.com/vi/6pclmimSptk/hqdefault.jpg)](https://www.youtube.com/embed/6pclmimSptk)
 
 Dokładniejszy opis jest w
-[`linux/cicd/README.md`](linux/cicd/README.md).
+[`linux/cicd`](linux/cicd).
 
 ## Kilka uwag
 
