@@ -3,10 +3,10 @@
 set -e
 
 # VM zarzadzane przez HA
-ALWAYS=(100 101 104 106 150 107)
+ALWAYS=(100 101 104 105 106 150 107)
 WINDOWS=(102 109 103)
-CICD=(133 134 135 130 132 105 131)
-HYBRIDAPP=(105)
+CICD=(133 134 135 130 132 131)
+HYBRIDAPP=(200)
 
 ustaw_stan() {
     stan=$1
@@ -40,7 +40,7 @@ czekaj_na_wylaczenie() {
 
 pokaz_status() {
     ha-manager status | grep -E \
-        '^(quorum|master|service vm:(100|101|102|103|104|105|106|107|109|130|131|132|133|134|135|150))'
+        '^(quorum|master|service vm:(100|101|102|103|104|105|106|107|109|130|131|132|133|134|135|150|200))'
 }
 
 case "$1" in
@@ -48,6 +48,10 @@ case "$1" in
         echo "Wylaczam profil CI/CD..."
         ustaw_stan stopped "${CICD[@]}"
         czekaj_na_wylaczenie "${CICD[@]}"
+        
+        echo "Wylaczam profil HYBRIDAPP..."
+        ustaw_stan stopped "${HYBRIDAPP[@]}"
+        czekaj_na_wylaczenie "${HYBRIDAPP[@]}"
 
         echo "Uruchamiam profil Windows..."
         ustaw_stan started "${ALWAYS[@]}"
@@ -58,10 +62,28 @@ case "$1" in
         echo "Wylaczam profil Windows..."
         ustaw_stan stopped "${WINDOWS[@]}"
         czekaj_na_wylaczenie "${WINDOWS[@]}"
+        
+        echo "Wylaczam profil HYBRIDAPP..."
+        ustaw_stan stopped "${HYBRIDAPP[@]}"
+        czekaj_na_wylaczenie "${HYBRIDAPP[@]}"
 
         echo "Uruchamiam profil CI/CD..."
         ustaw_stan started "${ALWAYS[@]}"
         ustaw_stan started "${CICD[@]}"
+        ;;
+        
+    hybridapp)
+        echo "Wylaczam profil Windows..."
+        ustaw_stan stopped "${WINDOWS[@]}"
+        czekaj_na_wylaczenie "${WINDOWS[@]}"
+        
+        echo "Wylaczam profil CI/CD..."
+        ustaw_stan stopped "${CICD[@]}"
+        czekaj_na_wylaczenie "${CICD[@]}"
+
+        echo "Uruchamiam profil HYBRIDAPP..."
+        ustaw_stan started "${ALWAYS[@]}"
+        ustaw_stan started "${HYBRIDAPP[@]}"
         ;;
 
     status)
