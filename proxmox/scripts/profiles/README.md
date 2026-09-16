@@ -7,9 +7,10 @@ Cztery krótkie skrypty zmieniają stan VM w Proxmox HA.
 
 | Zestaw | Maszyny |
 |---|---|
-| `always` | 100 DC1, 101 DC2, 104 Zabbix, 106 CloudSync, 150 VPN |
-| `windows` | 102 SQL, 103 SCCM, 107 PKI-ISS, 109 PKI-WEB |
+| `always` | 100 DC1, 101 DC2, 104 Zabbix, 106 CloudSync, 107 PKI-ISS, 150 VPN |
+| `windows` | 102 SQL, 103 SCCM, 109 PKI-WEB |
 | `cicd` | 105 Ansible, 130 GitLab, 131 Jenkins, 132 build, 133–135 K3s |
+| `hybridapp` | 105 Ansible |
 | `offline` | 108 PKI-ROOT, nie jest uruchamiana przez skrypt |
 
 ## Dodanie VM do HA
@@ -43,6 +44,9 @@ done
 
 # włącz CI/CD
 /mnt/pve/FileserverSMB/scripts/profil-cicd.sh
+
+# włącz HYBRIDAPP
+/mnt/pve/FileserverSMB/scripts/profil-hybridapp.sh
 ```
 
 Profil Windows najpierw wyłącza VM CI/CD, czeka na ich zatrzymanie, a później

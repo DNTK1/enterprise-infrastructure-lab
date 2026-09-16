@@ -7,9 +7,10 @@ noda HA może uruchomić je na innym nodzie.
 
 | Zestaw | VMID | Stan |
 |---|---|---|
-| `always` | 100, 101, 104, 106, 150 | zawsze uruchomione |
-| `windows` | 102, 103, 107, 109 | uruchamiane w profilu Windows |
+| `always` | 100, 101, 104, 106, 107, 150 | zawsze uruchomione |
+| `windows` | 102, 103, 109 | uruchamiane w profilu Windows |
 | `cicd` | 105, 130–135 | uruchamiane w profilu CI/CD |
+| `hybridapp` | 105 | aplikacja (TO DO) |
 | `offline` | 108 | Root CA, poza HA i normalnie wyłączona |
 
 ## Ustawienia
