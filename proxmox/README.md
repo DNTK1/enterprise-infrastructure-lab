@@ -9,6 +9,7 @@ Główny klaster składa się z pięciu nodów Proxmox VE. Trzy działają jako 
 | [ha.md](ha.md) | maszyny dodane do HA i podział na profile |
 | [nested-virtualization.md](nested-virtualization.md) | Proxmox uruchomiony wewnątrz VMware |
 | [scripts/profiles/](scripts/profiles/) | skrypty profili i statusu |
+| [scripts/deploy_rocky/](scripts/deploy_rocky/) | skrypty do tworzenia VM Rocky 10 |
 | [systemd/](systemd/) | Dodane usługi systemd |
 | [backup/](backup/) | Polityka backupów |
 
