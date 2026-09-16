@@ -66,7 +66,6 @@ Repozytorium zawiera opis środowiska, używane playbooki Ansible, skrypty bash 
 | [`windows/`](windows/) | AD, DNS, DHCP, NPS, PowerShell, SQL, SCCM, Entra Connect i PKI |
 | [`linux/`](linux/) | Rocky Linux, Ansible, platforma CI/CD |
 | [`monitoring/`](monitoring/) | Zabbix oraz monitoring K3s |
-| [`networking/`](networking/) | OPNsense, sieć Ceph i Tailscale |
 | [`troubleshooting/`](troubleshooting/) | problemy napotkane podczas budowy laba |
 
 ## Instalacja Rocky Linux 10 + Zabbix client (Bash+Ansible)
